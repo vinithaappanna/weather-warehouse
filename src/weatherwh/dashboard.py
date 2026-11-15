@@ -29,7 +29,8 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
         "",
         "![Average temperature by city](avg_temp_by_city.png)",
         "",
-        "Data: [Open-Meteo](https://open-meteo.com/) hourly forecast/archive API.",
+        "Data: [Open-Meteo](https://open-meteo.com/) hourly forecast API "
+        "(past days are model `past_days` output, not observations).",
         "",
     ]
     return "\n".join(lines)
@@ -51,10 +52,16 @@ def plot_avg_temp(con, out_path, today: dt.date | None = None) -> bool:
         ax.plot([p[0] for p in points], [p[1] for p in points], marker="o",
                 markersize=3, label=city)
     if today <= last_day:
-        ax.axvspan(today, last_day, color="grey", alpha=0.10)
+        # Shade from start of today through the end of the last data day so the
+        # forecast region is visible even when it covers only today.
+        ax.axvspan(today - dt.timedelta(days=0.5), last_day + dt.timedelta(days=0.5),
+                   color="grey", alpha=0.12)
         ax.annotate("forecast", xy=(today, ax.get_ylim()[1]), xytext=(0, 4),
                     textcoords="offset points", fontsize=8, color="grey")
-    ax.set_title("Average daily temperature by city (observed history; shaded = forecast)")
+    ax.set_title("Average daily temperature by city (Open-Meteo forecast model data; shaded = forecast)")
+    ax.text(0.01, 0.02,
+            "Past days are Open-Meteo model output (past_days), not ground-station observations.",
+            transform=ax.transAxes, fontsize=7, color="grey")
     ax.set_ylabel("deg C")
     ax.legend()
     fig.autofmt_xdate()

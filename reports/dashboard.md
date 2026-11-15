@@ -1,6 +1,6 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-15 20:00 UTC.
+Generated 2026-11-15 20:09 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -37,4 +37,4 @@ Generated 2026-11-15 20:00 UTC.
 
 ![Average temperature by city](avg_temp_by_city.png)
 
-Data: [Open-Meteo](https://open-meteo.com/) hourly forecast/archive API.
+Data: [Open-Meteo](https://open-meteo.com/) hourly forecast API (past days are model `past_days` output, not observations).

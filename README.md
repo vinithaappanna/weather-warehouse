@@ -45,7 +45,8 @@ python -m pytest                 # offline test suite (in-memory DuckDB)
 ingest is loud instead of silent. Re-runs are idempotent: already-loaded
 city/hour rows are skipped. The latest dashboard lives at
 [reports/dashboard.md](reports/dashboard.md); forecast days are shaded on the
-chart so observed history and forecasts are never confused.
+chart. Note the source is the Open-Meteo forecast endpoint for all dates:
+past days are the model's `past_days` output, not ground-station observations.
 
 ## Why DuckDB
 
