@@ -55,13 +55,13 @@ def plot_avg_temp(con, out_path, today: dt.date | None = None) -> bool:
         # Shade from start of today through the end of the last data day so the
         # forecast region is visible even when it covers only today.
         ax.axvspan(today - dt.timedelta(days=0.5), last_day + dt.timedelta(days=0.5),
-                   color="grey", alpha=0.12)
-        ax.annotate("forecast", xy=(today, ax.get_ylim()[1]), xytext=(0, 4),
-                    textcoords="offset points", fontsize=8, color="grey")
-    ax.set_title("Average daily temperature by city (Open-Meteo forecast model data; shaded = forecast)")
-    ax.text(0.01, 0.02,
-            "Past days are Open-Meteo model output (past_days), not ground-station observations.",
-            transform=ax.transAxes, fontsize=7, color="grey")
+                   color="grey", alpha=0.15)
+        mid = today + (last_day - today) / 2
+        ax.annotate("forecast", xy=(mid, ax.get_ylim()[0] + 1),
+                    ha="center", fontsize=8, color="dimgrey")
+    ax.set_title("Average daily temperature by city (Open-Meteo forecast model data; shaded = forecast)\n"
+                 "past days are model past_days output, not ground-station observations",
+                 fontsize=11)
     ax.set_ylabel("deg C")
     ax.legend()
     fig.autofmt_xdate()
