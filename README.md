@@ -1,5 +1,9 @@
 # Weather Warehouse
 
+![tests](https://github.com/vinithaappanna/weather-warehouse/actions/workflows/tests.yml/badge.svg)
+
+![Average daily temperature by city](reports/avg_temp_by_city.png)
+
 A small but real data engineering pipeline: hourly weather for four U.S. cities
 flows from the [Open-Meteo](https://open-meteo.com/) API (free, no key) into a
 local [DuckDB](https://duckdb.org/) warehouse with layered models, data quality
@@ -39,7 +43,9 @@ python -m pytest                 # offline test suite (in-memory DuckDB)
 
 `daily_update.py` exits non-zero if any data quality check fails, so a bad
 ingest is loud instead of silent. Re-runs are idempotent: already-loaded
-city/hour rows are skipped.
+city/hour rows are skipped. The latest dashboard lives at
+[reports/dashboard.md](reports/dashboard.md); forecast days are shaded on the
+chart so observed history and forecasts are never confused.
 
 ## Why DuckDB
 

@@ -35,12 +35,14 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     return "\n".join(lines)
 
 
-def plot_avg_temp(con, out_path) -> bool:
+def plot_avg_temp(con, out_path, today: dt.date | None = None) -> bool:
     rows = con.execute(
         "SELECT day, city, avg_temp_c FROM mart_daily_city ORDER BY day"
     ).fetchall()
     if not rows:
         return False
+    today = today or dt.date.today()
+    last_day = rows[-1][0]
     by_city: dict[str, list] = {}
     for day, city, temp in rows:
         by_city.setdefault(city, []).append((day, temp))
@@ -48,7 +50,11 @@ def plot_avg_temp(con, out_path) -> bool:
     for city, points in by_city.items():
         ax.plot([p[0] for p in points], [p[1] for p in points], marker="o",
                 markersize=3, label=city)
-    ax.set_title("Average daily temperature by city")
+    if today <= last_day:
+        ax.axvspan(today, last_day, color="grey", alpha=0.10)
+        ax.annotate("forecast", xy=(today, ax.get_ylim()[1]), xytext=(0, 4),
+                    textcoords="offset points", fontsize=8, color="grey")
+    ax.set_title("Average daily temperature by city (observed history; shaded = forecast)")
     ax.set_ylabel("deg C")
     ax.legend()
     fig.autofmt_xdate()
