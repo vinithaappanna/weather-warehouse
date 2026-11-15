@@ -12,8 +12,15 @@ def connect(path: str = ":memory:") -> duckdb.DuckDBPyConnection:
     return duckdb.connect(path)
 
 
+def _run(con, sql: str, params=None) -> None:
+    """Execute and fully consume the result: newer DuckDB errors if a
+    connection has an unconsumed result when the next statement runs."""
+    cur = con.execute(sql, params) if params else con.execute(sql)
+    cur.fetchall()
+
+
 def ensure_raw_table(con) -> None:
-    con.execute(
+    _run(con,
         f"""
         CREATE TABLE IF NOT EXISTS {RAW_TABLE} (
             city VARCHAR,
@@ -36,7 +43,7 @@ def load_raw(con, rows: list[dict]) -> int:
     frame = pd.DataFrame(rows)
     con.register("_incoming", frame)
     cols = ", ".join(["city", "hour", "ingested_at", *HOURLY_VARIABLES])
-    con.execute(
+    _run(con,
         f"""
         INSERT INTO {RAW_TABLE}
         SELECT {cols} FROM _incoming i
@@ -53,7 +60,7 @@ def load_raw(con, rows: list[dict]) -> int:
 
 def build_staging(con) -> None:
     """Typed, deduped, sanity-filtered view over raw."""
-    con.execute(
+    _run(con,
         f"""
         CREATE OR REPLACE VIEW stg_hourly AS
         SELECT DISTINCT
@@ -70,7 +77,7 @@ def build_staging(con) -> None:
 
 def build_marts(con) -> None:
     """Daily per-city summary."""
-    con.execute(
+    _run(con,
         """
         CREATE OR REPLACE TABLE mart_daily_city AS
         SELECT
