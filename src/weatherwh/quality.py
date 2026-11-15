@@ -8,7 +8,7 @@ import datetime as dt
 def check_no_null_temperatures(con) -> list[str]:
     n = con.execute(
         "SELECT count(*) FROM stg_hourly WHERE temperature_c IS NULL"
-    ).fetchone()[0]
+    ).fetchall()[0][0]
     return [f"{n} hourly rows have NULL temperature"] if n else []
 
 
@@ -29,7 +29,7 @@ def check_no_far_future_hours(con, now: dt.datetime | None = None,
     cutoff = now + dt.timedelta(hours=horizon_hours)
     n = con.execute(
         "SELECT count(*) FROM stg_hourly WHERE hour > ?", [cutoff]
-    ).fetchone()[0]
+    ).fetchall()[0][0]
     return [f"{n} hourly rows are beyond the {horizon_hours}h forecast horizon"] if n else []
 
 

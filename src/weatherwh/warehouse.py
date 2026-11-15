@@ -19,6 +19,13 @@ def _run(con, sql: str, params=None) -> None:
     cur.fetchall()
 
 
+def _scalar(con, sql: str, params=None):
+    """Execute a single-value query, consuming every row it returns."""
+    cur = con.execute(sql, params) if params else con.execute(sql)
+    rows = cur.fetchall()
+    return rows[0][0] if rows else None
+
+
 def ensure_raw_table(con) -> None:
     _run(con,
         f"""
@@ -37,7 +44,7 @@ def load_raw(con, rows: list[dict]) -> int:
     ensure_raw_table(con)
     if not rows:
         return 0
-    before = con.execute(f"SELECT count(*) FROM {RAW_TABLE}").fetchone()[0]
+    before = _scalar(con, f"SELECT count(*) FROM {RAW_TABLE}")
     import pandas as pd
 
     frame = pd.DataFrame(rows)
@@ -54,7 +61,7 @@ def load_raw(con, rows: list[dict]) -> int:
         """
     )
     con.unregister("_incoming")
-    after = con.execute(f"SELECT count(*) FROM {RAW_TABLE}").fetchone()[0]
+    after = _scalar(con, f"SELECT count(*) FROM {RAW_TABLE}")
     return after - before
 
 
