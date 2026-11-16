@@ -109,3 +109,20 @@ def refresh(con, rows: list[dict]) -> int:
     build_staging(con)
     build_marts(con)
     return added
+
+
+def export_mart_csv(con, path) -> int:
+    """Snapshot mart_daily_city to CSV. The DuckDB file is gitignored, so this
+    committed CSV is what lets daily history survive a fresh checkout.
+    Returns rows written (excluding header)."""
+    import csv as csv_mod
+
+    cur = con.execute("SELECT * FROM mart_daily_city ORDER BY day, city")
+    cols = [d[0] for d in cur.description]
+    rows = cur.fetchall()
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        writer = csv_mod.writer(fh)
+        writer.writerow(cols)
+        writer.writerows(rows)
+    return len(rows)
+

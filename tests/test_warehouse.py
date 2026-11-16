@@ -86,3 +86,18 @@ def test_quality_flags_far_future_hours(con):
 def test_quality_flags_sparse_days(con):
     warehouse.refresh(con, make_rows(hours=2))
     assert quality.check_full_days(con, expected_hours=20)
+
+
+def test_export_mart_csv_roundtrip(tmp_path):
+    con = warehouse.connect()
+    rows = make_rows(hours=4) + make_rows(city="Chicago", hours=2)
+    warehouse.refresh(con, rows)
+    out = tmp_path / "mart.csv"
+    n = warehouse.export_mart_csv(con, out)
+    assert n == 2  # two city-days
+    import csv as csv_mod
+    with open(out, newline="", encoding="utf-8") as fh:
+        read = list(csv_mod.DictReader(fh))
+    assert {r["city"] for r in read} == {"Newark", "Chicago"}
+    assert read[0]["day"] == "2026-11-14"
+    con.close()

@@ -34,6 +34,11 @@ def main() -> int:
     for issue in issues:
         print(f"QUALITY ISSUE: {issue}")
 
+    # The DuckDB file is gitignored, so snapshot the daily mart to a
+    # committed CSV: history survives fresh checkouts and sandbox resets.
+    written = warehouse.export_mart_csv(con, ROOT / "data" / "mart_daily_city.csv")
+    print(f"exported {written} mart rows to data/mart_daily_city.csv")
+
     (REPORTS / "dashboard.md").write_text(dashboard.render_markdown(con), encoding="utf-8")
     if dashboard.plot_avg_temp(con, REPORTS / "avg_temp_by_city.png"):
         print("wrote chart")
