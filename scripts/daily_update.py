@@ -34,9 +34,14 @@ def main() -> int:
     for issue in issues:
         print(f"QUALITY ISSUE: {issue}")
 
-    # The DuckDB file is gitignored, so snapshot the daily mart to a
-    # committed CSV: history survives fresh checkouts and sandbox resets.
-    written = warehouse.export_mart_csv(con, ROOT / "data" / "mart_daily_city.csv")
+    # The DuckDB file is gitignored; the committed CSV is the durable store.
+    # Merge its history back into the mart first (so the snapshot grows
+    # monotonically across fresh checkouts), then re-export.
+    csv_path = ROOT / "data" / "mart_daily_city.csv"
+    merged = warehouse.merge_mart_csv(con, csv_path)
+    if merged:
+        print(f"restored {merged} historical city-days from CSV snapshot")
+    written = warehouse.export_mart_csv(con, csv_path)
     print(f"exported {written} mart rows to data/mart_daily_city.csv")
 
     (REPORTS / "dashboard.md").write_text(dashboard.render_markdown(con), encoding="utf-8")

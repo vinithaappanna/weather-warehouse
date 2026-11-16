@@ -101,3 +101,47 @@ def test_export_mart_csv_roundtrip(tmp_path):
     assert {r["city"] for r in read} == {"Newark", "Chicago"}
     assert read[0]["day"] == "2026-11-14"
     con.close()
+
+
+def test_merge_mart_csv_restores_history(tmp_path):
+    import datetime as dt2
+    # Day 1: warehouse has old data, snapshot it.
+    old = warehouse.connect()
+    warehouse.refresh(old, make_rows(day=dt2.datetime(2026, 11, 1), hours=4, temp=5.0))
+    snap = tmp_path / "mart.csv"
+    warehouse.export_mart_csv(old, snap)
+    old.close()
+
+    # Day 2: fresh warehouse (new checkout) only has recent data.
+    new = warehouse.connect()
+    warehouse.refresh(new, make_rows(day=dt2.datetime(2026, 11, 14), hours=3, temp=9.0))
+    merged = warehouse.merge_mart_csv(new, snap)
+    assert merged == 1  # the 2026-11-01 Newark city-day came back
+    days = [r[0] for r in new.execute(
+        "SELECT DISTINCT day FROM mart_daily_city ORDER BY day").fetchall()]
+    assert days == [dt2.date(2026, 11, 1), dt2.date(2026, 11, 14)]
+    new.close()
+
+
+def test_merge_mart_csv_fresh_rows_win(tmp_path):
+    import datetime as dt2
+    old = warehouse.connect()
+    warehouse.refresh(old, make_rows(hours=4, temp=5.0))  # 2026-11-14, avg 7.5
+    snap = tmp_path / "mart.csv"
+    warehouse.export_mart_csv(old, snap)
+    old.close()
+
+    new = warehouse.connect()
+    warehouse.refresh(new, make_rows(hours=4, temp=20.0))  # same day, newer avg
+    merged = warehouse.merge_mart_csv(new, snap)
+    assert merged == 0  # nothing new to restore
+    avg = new.execute("SELECT avg_temp_c FROM mart_daily_city").fetchone()[0]
+    assert avg == 21.5  # fresh rebuild wins over the stale snapshot
+    new.close()
+
+
+def test_merge_mart_csv_missing_file(tmp_path):
+    con = warehouse.connect()
+    warehouse.refresh(con, make_rows())
+    assert warehouse.merge_mart_csv(con, tmp_path / "nope.csv") == 0
+    con.close()

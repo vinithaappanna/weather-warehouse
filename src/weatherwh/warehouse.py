@@ -126,3 +126,45 @@ def export_mart_csv(con, path) -> int:
         writer.writerows(rows)
     return len(rows)
 
+
+
+def merge_mart_csv(con, path) -> int:
+    """Merge historical city-day rows from a committed CSV snapshot into
+    mart_daily_city. Freshly rebuilt rows win on overlap; rows older than the
+    ingest window are restored, so the committed snapshot grows monotonically
+    instead of shrinking to the API window after a fresh checkout.
+    Returns rows merged."""
+    import os
+
+    path = str(path)
+    if not os.path.exists(path):
+        return 0
+    safe = path.replace("'", "''")
+    before = _scalar(con, "SELECT count(*) FROM mart_daily_city")
+    _run(con,
+        f"""
+        CREATE OR REPLACE TEMP VIEW _mart_hist AS
+        SELECT
+            city::VARCHAR AS city,
+            day::DATE AS day,
+            avg_temp_c::DOUBLE AS avg_temp_c,
+            min_temp_c::DOUBLE AS min_temp_c,
+            max_temp_c::DOUBLE AS max_temp_c,
+            total_precip_mm::DOUBLE AS total_precip_mm,
+            max_wind_kmh::DOUBLE AS max_wind_kmh,
+            hours_observed::BIGINT AS hours_observed
+        FROM read_csv_auto('{safe}', header=true)
+        """
+    )
+    _run(con,
+        """
+        INSERT INTO mart_daily_city
+        SELECT h.* FROM _mart_hist h
+        WHERE NOT EXISTS (
+            SELECT 1 FROM mart_daily_city m
+            WHERE m.city = h.city AND m.day = h.day
+        )
+        """
+    )
+    after = _scalar(con, "SELECT count(*) FROM mart_daily_city")
+    return after - before
