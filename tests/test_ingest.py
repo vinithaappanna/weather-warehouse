@@ -74,3 +74,30 @@ def test_fetch_city_hourly_raises_on_error():
     session = FakeSession(FakeResponse(429, {}))
     with pytest.raises(ingest.IngestError):
         ingest.fetch_city_hourly(NEWARK, session=session)
+
+
+class FlakySession:
+    def __init__(self, fail_times, response):
+        self.fail_times = fail_times
+        self.response = response
+        self.n = 0
+
+    def get(self, url, params=None, timeout=None):
+        self.n += 1
+        if self.n <= self.fail_times:
+            import requests
+            raise requests.ConnectionError("handshake timeout")
+        return self.response
+
+
+def test_fetch_retries_transient_network_errors():
+    session = FlakySession(2, FakeResponse(200, PAYLOAD))
+    rows = ingest.fetch_city_hourly(NEWARK, session=session, backoff_s=0)
+    assert session.n == 3 and len(rows) == 3
+
+
+def test_fetch_gives_up_after_max_attempts():
+    session = FlakySession(5, FakeResponse(200, PAYLOAD))
+    with pytest.raises(ingest.IngestError):
+        ingest.fetch_city_hourly(NEWARK, session=session, max_attempts=3, backoff_s=0)
+    assert session.n == 3

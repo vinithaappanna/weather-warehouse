@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import time
 
 import requests
 
@@ -15,21 +16,36 @@ class IngestError(RuntimeError):
 
 
 def fetch_city_hourly(city: City, past_days: int = 7, forecast_days: int = 1,
-                      session=None) -> list[dict]:
-    """Return one flat dict per hour for a city."""
+                      session=None, max_attempts: int = 3,
+                      backoff_s: float = 2.0) -> list[dict]:
+    """Return one flat dict per hour for a city.
+
+    Open-Meteo occasionally drops connections (TLS handshake timeouts), so
+    transient network errors are retried with backoff before giving up.
+    Non-200 responses are not retried: they are the API answering.
+    """
     http = session or requests.Session()
-    resp = http.get(
-        FORECAST_URL,
-        params={
-            "latitude": city.latitude,
-            "longitude": city.longitude,
-            "hourly": ",".join(HOURLY_VARIABLES),
-            "past_days": past_days,
-            "forecast_days": forecast_days,
-            "timezone": city.timezone,
-        },
-        timeout=30,
-    )
+    params = {
+        "latitude": city.latitude,
+        "longitude": city.longitude,
+        "hourly": ",".join(HOURLY_VARIABLES),
+        "past_days": past_days,
+        "forecast_days": forecast_days,
+        "timezone": city.timezone,
+    }
+    last_exc: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            resp = http.get(FORECAST_URL, params=params, timeout=30)
+            break
+        except requests.RequestException as exc:
+            last_exc = exc
+            if attempt < max_attempts:
+                time.sleep(backoff_s * attempt)
+    else:
+        raise IngestError(
+            f"Open-Meteo unreachable for {city.name} after {max_attempts} "
+            f"attempts: {last_exc}") from last_exc
     if resp.status_code != 200:
         raise IngestError(f"Open-Meteo returned {resp.status_code} for {city.name}")
     return flatten_payload(city, resp.json(), ingested_at=dt.datetime.now(dt.timezone.utc))
