@@ -1,6 +1,6 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-17 15:05 UTC.
+Generated 2026-11-17 20:05 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -45,6 +45,15 @@ Hours at or above 30C / at or below 0C and degree-hours beyond each threshold. I
 | New York | 0 | 0 | 0.0 | 0.0 |
 | Newark | 0 | 0 | 0.0 | 0.0 |
 | San Francisco | 0 | 0 | 0.0 | 0.0 |
+
+## Unusual days
+
+Daily average temperature vs the city's other days (|z| >= 2). Informational: weather, not a data-quality failure.
+
+| city | day | avg temp C | z-score |
+| --- | --- | ---: | ---: |
+| San Francisco | 2026-11-17 | 10.22 | -2.9 |
+| Chicago | 2026-11-10 | 9.3 | 2.16 |
 
 ![Average temperature by city](avg_temp_by_city.png)
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import datetime as dt
 
+from . import anomalies
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -38,6 +40,14 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| --- | ---: | ---: | ---: | ---: |"]
         for row in exposure:
             lines.append("| " + " | ".join(str(v) for v in row) + " |")
+    unusual = anomalies.load_and_find(con)[:8]
+    if unusual:
+        lines += ["", "## Unusual days", "",
+                  "Daily average temperature vs the city's other days (|z| >= 2). "
+                  "Informational: weather, not a data-quality failure.", "",
+                  "| city | day | avg temp C | z-score |", "| --- | --- | ---: | ---: |"]
+        for a in unusual:
+            lines.append(f"| {a['city']} | {a['day']} | {a['avg_temp_c']} | {a['z']} |")
     lines += [
         "",
         "![Average temperature by city](avg_temp_by_city.png)",
