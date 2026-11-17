@@ -103,11 +103,40 @@ def build_marts(con) -> None:
     )
 
 
+HEAT_C = 30.0  # illustrative public-health style thresholds
+COLD_C = 0.0
+
+
+def build_exposure_mart(con, heat_c: float = HEAT_C, cold_c: float = COLD_C) -> None:
+    """Daily heat/cold exposure per city: hours above/below a threshold and
+    degree-hours beyond it. A simple health-risk style view (heat illness,
+    cold stress); thresholds are illustrative, not clinical guidance."""
+    _run(con,
+        """
+        CREATE OR REPLACE TABLE mart_exposure_city AS
+        SELECT
+            city,
+            CAST(hour AS DATE) AS day,
+            count(*) FILTER (WHERE temperature_c >= ?) AS heat_hours,
+            count(*) FILTER (WHERE temperature_c <= ?) AS cold_hours,
+            round(coalesce(sum(temperature_c - ?) FILTER (WHERE temperature_c >= ?), 0), 2)
+                AS heat_degree_hours,
+            round(coalesce(sum(? - temperature_c) FILTER (WHERE temperature_c <= ?), 0), 2)
+                AS cold_degree_hours
+        FROM stg_hourly
+        GROUP BY city, CAST(hour AS DATE)
+        ORDER BY day, city
+        """,
+        [heat_c, cold_c, heat_c, heat_c, cold_c, cold_c],
+    )
+
+
 def refresh(con, rows: list[dict]) -> int:
     """Full daily refresh: load raw, rebuild staging and marts. Returns rows added."""
     added = load_raw(con, rows)
     build_staging(con)
     build_marts(con)
+    build_exposure_mart(con)
     return added
 
 

@@ -1,6 +1,6 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-17 12:05 UTC.
+Generated 2026-11-17 15:05 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -34,6 +34,17 @@ Generated 2026-11-17 12:05 UTC.
 | San Francisco | 2026-11-11 | 16.03 | 11.5 | 22.7 | 0.0 | 11.9 | 24 |
 | Chicago | 2026-11-10 | 9.3 | 4.4 | 16.1 | 0.0 | 11.0 | 24 |
 | New York | 2026-11-10 | 12.24 | 7.6 | 17.6 | 0.0 | 23.4 | 24 |
+
+## Heat / cold exposure (current window)
+
+Hours at or above 30C / at or below 0C and degree-hours beyond each threshold. Illustrative thresholds, not clinical guidance.
+
+| city | heat hours | cold hours | heat degree-hours | cold degree-hours |
+| --- | ---: | ---: | ---: | ---: |
+| Chicago | 0 | 17 | 0.0 | 6.0 |
+| New York | 0 | 0 | 0.0 | 0.0 |
+| Newark | 0 | 0 | 0.0 | 0.0 |
+| San Francisco | 0 | 0 | 0.0 | 0.0 |
 
 ![Average temperature by city](avg_temp_by_city.png)
 

@@ -25,6 +25,19 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     ]
     for row in rows:
         lines.append("| " + " | ".join(str(v) for v in row) + " |")
+    exposure = con.execute(
+        "SELECT city, sum(heat_hours), sum(cold_hours), "
+        "round(sum(heat_degree_hours), 1), round(sum(cold_degree_hours), 1) "
+        "FROM mart_exposure_city GROUP BY city ORDER BY city"
+    ).fetchall()
+    if exposure:
+        lines += ["", "## Heat / cold exposure (current window)", "",
+                  "Hours at or above 30C / at or below 0C and degree-hours beyond "
+                  "each threshold. Illustrative thresholds, not clinical guidance.", "",
+                  "| city | heat hours | cold hours | heat degree-hours | cold degree-hours |",
+                  "| --- | ---: | ---: | ---: | ---: |"]
+        for row in exposure:
+            lines.append("| " + " | ".join(str(v) for v in row) + " |")
     lines += [
         "",
         "![Average temperature by city](avg_temp_by_city.png)",

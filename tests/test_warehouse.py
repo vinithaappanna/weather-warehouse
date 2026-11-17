@@ -145,3 +145,32 @@ def test_merge_mart_csv_missing_file(tmp_path):
     warehouse.refresh(con, make_rows())
     assert warehouse.merge_mart_csv(con, tmp_path / "nope.csv") == 0
     con.close()
+
+
+def test_exposure_mart_counts_hours_and_degree_hours(con):
+    day = dt.datetime(2026, 7, 1)
+    temps = [28.0, 30.0, 33.0, -2.0, 0.0, 10.0]
+    rows = [{"city": "Chicago", "hour": day + dt.timedelta(hours=h),
+             "ingested_at": INGESTED, "temperature_2m": t,
+             "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for h, t in enumerate(temps)]
+    warehouse.refresh(con, rows)
+    city, d, heat_h, cold_h, heat_dh, cold_dh = con.execute(
+        "SELECT * FROM mart_exposure_city").fetchall()[0]
+    assert (city, heat_h, cold_h) == ("Chicago", 2, 2)  # 30 and 33; -2 and 0
+    assert heat_dh == 3.0  # (30-30) + (33-30)
+    assert cold_dh == 2.0  # (0-(-2)) + (0-0)
+
+
+def test_exposure_mart_is_per_city_day_and_zero_filled(con):
+    rows = make_rows(city="Newark", temp=10.0) + make_rows(city="Chicago", temp=12.0)
+    warehouse.refresh(con, rows)
+    out = con.execute("SELECT city, heat_hours, cold_hours, heat_degree_hours "
+                      "FROM mart_exposure_city ORDER BY city").fetchall()
+    assert out == [("Chicago", 0, 0, 0.0), ("Newark", 0, 0, 0.0)]
+
+
+def test_dashboard_includes_exposure_section(con):
+    from weatherwh import dashboard
+    warehouse.refresh(con, make_rows(temp=31.0))
+    assert "Heat / cold exposure" in dashboard.render_markdown(con)
