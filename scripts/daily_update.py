@@ -30,6 +30,9 @@ def main() -> int:
     added = warehouse.refresh(con, rows)
     print(f"warehouse: {added} new rows loaded")
 
+    # Freshness is evaluated right after this run's own ingest, so the overnight
+    # gap between rounds (3pm to 7am) cannot trip it: each run loads new hours stamped
+    # now. It fails only if a run loads nothing new for over 6h (a stalled upstream).
     issues = (quality.run_all(con) + quality.check_all_cities_present(con)
               + quality.check_fresh_ingest(con))
     for issue in issues:
