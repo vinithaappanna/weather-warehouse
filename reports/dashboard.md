@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-18 15:09 UTC.
+Generated 2026-11-18 20:03 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-18 | 7.52 | 2.6 | 14.9 | 0.0 | 18.2 | 24 |
-| New York | 2026-11-18 | 9.32 | 5.1 | 16.3 | 0.0 | 9.2 | 24 |
-| Newark | 2026-11-18 | 9.4 | 3.1 | 18.0 | 0.0 | 10.1 | 24 |
-| San Francisco | 2026-11-18 | 12.25 | 10.5 | 14.4 | 36.1 | 32.3 | 24 |
+| Chicago | 2026-11-18 | 7.53 | 2.6 | 15.3 | 0.0 | 18.3 | 24 |
+| New York | 2026-11-18 | 9.87 | 5.1 | 17.8 | 0.0 | 9.3 | 24 |
+| Newark | 2026-11-18 | 10.02 | 3.1 | 18.7 | 0.0 | 9.8 | 24 |
+| San Francisco | 2026-11-18 | 12.1 | 10.5 | 14.1 | 44.6 | 29.3 | 24 |
 | Chicago | 2026-11-17 | 5.49 | 0.5 | 12.5 | 0.0 | 11.3 | 24 |
 | New York | 2026-11-17 | 8.38 | 3.1 | 14.8 | 0.0 | 11.3 | 24 |
 | Newark | 2026-11-17 | 8.37 | 2.2 | 15.3 | 0.0 | 11.8 | 24 |
@@ -52,7 +52,7 @@ Daily average temperature vs the city's other days (|z| >= 2). Informational: we
 
 | city | day | avg temp C | z-score |
 | --- | --- | ---: | ---: |
-| San Francisco | 2026-11-17 | 10.46 | -2.45 |
+| San Francisco | 2026-11-17 | 10.46 | -2.4 |
 
 ## Precipitation
 
@@ -60,7 +60,7 @@ Model output in mm over the window; the current day includes forecast hours.
 
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
-| San Francisco | 66.0 | 5 |
+| San Francisco | 74.5 | 5 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
 | Chicago | 16.7 | 4 |
@@ -71,7 +71,7 @@ Daily rain >= 10 mm or wind >= 50 km/h. Illustrative thresholds, not official we
 
 | city | day | precip mm | max wind km/h | why | day status |
 | --- | --- | ---: | ---: | --- | --- |
-| San Francisco | 2026-11-18 | 36.1 | 32.3 | heavy rain | in progress (includes forecast hours) |
+| San Francisco | 2026-11-18 | 44.6 | 29.3 | heavy rain | in progress (includes forecast hours) |
 | Chicago | 2026-11-13 | 10.5 | 26.7 | heavy rain | complete |
 | San Francisco | 2026-11-13 | 13.8 | 21.9 | heavy rain | complete |
 | New York | 2026-11-12 | 21.7 | 24.5 | heavy rain | complete |
