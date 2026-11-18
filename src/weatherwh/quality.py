@@ -64,6 +64,39 @@ def check_fresh_ingest(con, now: dt.datetime | None = None, max_age_hours: int =
     return [f"latest ingest is {age:.1f}h old (limit {max_age_hours}h)"] if age > max_age_hours else []
 
 
+def check_fresh_fetch(con, now: dt.datetime | None = None, max_age_hours: int = 6,
+                      expected: list[str] | None = None) -> list[str]:
+    """Source-fetch freshness: every city needs a recent fetch that returned
+    rows. Uses fetch_log, not raw ingested_at, so an empty or failed fetch
+    is detected even though cached rows still sit in the warehouse."""
+    if expected is None:
+        from .config import CITIES
+        expected = [c.name for c in CITIES]
+    now = now or dt.datetime.now()
+    try:
+        logged = con.execute(
+            "SELECT city, max(fetched_at) FROM fetch_log WHERE rows_returned > 0 GROUP BY city"
+        ).fetchall()
+    except Exception:
+        return ["no fetch log recorded"]
+    last = dict(logged)
+    issues = []
+    for city in expected:
+        if city not in last:
+            issues.append(f"no successful fetch recorded for {city}")
+        else:
+            age = (now - last[city]).total_seconds() / 3600
+            if age > max_age_hours:
+                issues.append(f"last successful fetch for {city} is {age:.1f}h old (limit {max_age_hours}h)")
+    return issues
+
+
+def latest_available_hour(con) -> dict[str, dt.datetime]:
+    """Latest weather hour held per city. Reported separately from fetch
+    freshness: forecast_days=1 means this is normally later than 'now'."""
+    return dict(con.execute("SELECT city, max(hour) FROM stg_hourly GROUP BY city").fetchall())
+
+
 def run_all(con) -> list[str]:
     issues: list[str] = []
     for check in (check_no_null_temperatures, check_temperature_sane,

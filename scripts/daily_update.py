@@ -27,6 +27,7 @@ def main() -> int:
     REPORTS.mkdir(exist_ok=True)
 
     con = warehouse.connect(str(DB_PATH))
+    warehouse.record_fetch(con, rows, [c.name for c in config.CITIES])
     added = warehouse.refresh(con, rows)
     print(f"warehouse: {added} new rows loaded")
 
@@ -34,7 +35,9 @@ def main() -> int:
     # gap between rounds (3pm to 7am) cannot trip it: each run loads new hours stamped
     # now. It fails only if a run loads nothing new for over 6h (a stalled upstream).
     issues = (quality.run_all(con) + quality.check_all_cities_present(con)
-              + quality.check_fresh_ingest(con))
+              + quality.check_fresh_fetch(con))
+    for city, hr in sorted(quality.latest_available_hour(con).items()):
+        print(f"latest available hour {city}: {hr}")
     for issue in issues:
         print(f"QUALITY ISSUE: {issue}")
 

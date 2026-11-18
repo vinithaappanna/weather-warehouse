@@ -80,3 +80,52 @@ def test_reloading_refreshes_forecast_hours_without_new_rows():
     assert warehouse.load_raw(con, [later]) == 0  # identical reload: still one row
     assert con.execute("SELECT count(*) FROM raw_weather_hourly").fetchall()[0][0] == 1
     con.close()
+
+
+def _row(city, hour, precip=0.0):
+    return dict(city=city, hour=hour, ingested_at=hour, temperature_2m=10.0,
+                precipitation=precip, wind_speed_10m=3.0)
+
+
+def test_empty_fetch_fails_freshness_even_with_cached_rows():
+    from weatherwh import quality
+    con = warehouse.connect(":memory:")
+    now = dt.datetime(2026, 11, 18, 12, 0)
+    good = [_row("A", T0)]
+    warehouse.record_fetch(con, good, ["A"], now=now - dt.timedelta(hours=10))
+    warehouse.refresh(con, good)  # cached rows exist
+    # a later run fetches nothing (empty payload): rows stay cached, fetch is logged as empty
+    warehouse.record_fetch(con, [], ["A"], now=now)
+    issues = quality.check_fresh_fetch(con, now=now, expected=["A"])
+    assert issues and "10.0h old" in issues[0]
+    # a genuine non-empty fetch clears it
+    warehouse.record_fetch(con, good, ["A"], now=now)
+    assert quality.check_fresh_fetch(con, now=now, expected=["A"]) == []
+    con.close()
+
+
+def test_missing_city_fetch_flagged_and_latest_hour_is_separate():
+    from weatherwh import quality
+    con = warehouse.connect(":memory:")
+    now = dt.datetime(2026, 11, 18, 12, 0)
+    rows = [_row("A", T0), _row("A", T0 + dt.timedelta(hours=30))]
+    warehouse.record_fetch(con, rows, ["A", "B"], now=now)
+    warehouse.refresh(con, rows)
+    assert quality.check_fresh_fetch(con, now=now, expected=["A", "B"]) == [
+        "no successful fetch recorded for B"]
+    # latest available hour (forecast horizon) is independent of fetch time
+    assert quality.latest_available_hour(con)["A"] == T0 + dt.timedelta(hours=30)
+    con.close()
+
+
+def test_revised_hour_flows_to_every_mart_and_dashboard():
+    con = warehouse.connect(":memory:")
+    first = [_row("A", T0, 40.0)]
+    warehouse.refresh(con, first)
+    assert "A" in dashboard.render_markdown(con) and extremes.severe_days(con)
+    revised = [dict(_row("A", T0, 1.0), ingested_at=T0 + dt.timedelta(hours=6))]
+    warehouse.refresh(con, revised)
+    assert con.execute("SELECT total_precip_mm FROM mart_daily_city").fetchall() == [(1.0,)]
+    assert extremes.severe_days(con) == []
+    assert "40" not in "".join(l for l in dashboard.render_markdown(con).splitlines() if "| A |" in l)
+    con.close()

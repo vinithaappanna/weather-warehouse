@@ -212,3 +212,21 @@ def merge_mart_csv(con, path) -> int:
     )
     after = _scalar(con, "SELECT count(*) FROM mart_daily_city")
     return after - before
+
+
+FETCH_LOG = "fetch_log"
+
+
+def record_fetch(con, rows: list[dict], cities: list[str], now=None) -> None:
+    """Log one upstream fetch per city: when it happened and how many hours
+    came back. Only a non-empty response counts as a successful fetch, so
+    source-fetch freshness cannot be satisfied by re-stamping cached rows."""
+    import datetime as dt
+
+    now = now or dt.datetime.now()
+    _run(con, f"CREATE TABLE IF NOT EXISTS {FETCH_LOG} "
+              "(city VARCHAR, fetched_at TIMESTAMP, rows_returned BIGINT, latest_hour_returned TIMESTAMP)")
+    for city in cities:
+        mine = [r for r in rows if r["city"] == city]
+        latest = max((r["hour"] for r in mine), default=None)
+        _run(con, f"INSERT INTO {FETCH_LOG} VALUES (?, ?, ?, ?)", [city, now, len(mine), latest])
