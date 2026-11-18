@@ -174,3 +174,24 @@ def test_dashboard_includes_exposure_section(con):
     from weatherwh import dashboard
     warehouse.refresh(con, make_rows(temp=31.0))
     assert "Heat / cold exposure" in dashboard.render_markdown(con)
+
+
+def test_missing_city_flagged(con):
+    warehouse.refresh(con, make_rows(city="Newark"))
+    issues = quality.check_all_cities_present(con, expected=["Newark", "Chicago"])
+    assert issues == ["no data for city Chicago"]
+    assert quality.check_all_cities_present(con, expected=["Newark"]) == []
+
+
+def test_stale_ingest_flagged_and_fresh_passes(con):
+    warehouse.refresh(con, make_rows())  # ingested_at = INGESTED (Nov 15 12:00)
+    fresh_now = INGESTED + dt.timedelta(hours=2)
+    stale_now = INGESTED + dt.timedelta(hours=30)
+    assert quality.check_fresh_ingest(con, now=fresh_now) == []
+    issues = quality.check_fresh_ingest(con, now=stale_now)
+    assert len(issues) == 1 and "30.0h old" in issues[0]
+
+
+def test_fresh_ingest_on_empty_warehouse(con):
+    warehouse.ensure_raw_table(con)
+    assert quality.check_fresh_ingest(con) == ["no ingest timestamps recorded"]

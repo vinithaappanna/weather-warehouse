@@ -1,9 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-17 20:05 UTC.
+Generated 2026-11-18 12:03 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Chicago | 2026-11-18 | 7.7 | 2.5 | 15.3 | 0.0 | 17.5 | 24 |
+| New York | 2026-11-18 | 9.43 | 3.7 | 18.0 | 0.0 | 10.5 | 24 |
+| Newark | 2026-11-18 | 9.57 | 2.7 | 18.3 | 0.0 | 11.3 | 24 |
+| San Francisco | 2026-11-18 | 11.6 | 10.4 | 13.4 | 85.4 | 30.4 | 24 |
 | Chicago | 2026-11-17 | 5.17 | 0.1 | 12.4 | 0.0 | 12.8 | 24 |
 | New York | 2026-11-17 | 7.9 | 1.7 | 15.1 | 0.0 | 13.7 | 24 |
 | Newark | 2026-11-17 | 7.68 | 1.1 | 15.2 | 0.0 | 12.3 | 24 |
@@ -30,10 +34,6 @@ Generated 2026-11-17 20:05 UTC.
 | San Francisco | 2026-11-12 | 15.78 | 10.7 | 21.3 | 0.0 | 20.9 | 24 |
 | Chicago | 2026-11-11 | 7.85 | 4.5 | 11.8 | 3.3 | 29.4 | 24 |
 | New York | 2026-11-11 | 13.37 | 8.8 | 18.3 | 0.0 | 12.0 | 24 |
-| Newark | 2026-11-11 | 12.84 | 7.8 | 18.4 | 0.0 | 15.0 | 24 |
-| San Francisco | 2026-11-11 | 16.03 | 11.5 | 22.7 | 0.0 | 11.9 | 24 |
-| Chicago | 2026-11-10 | 9.3 | 4.4 | 16.1 | 0.0 | 11.0 | 24 |
-| New York | 2026-11-10 | 12.24 | 7.6 | 17.6 | 0.0 | 23.4 | 24 |
 
 ## Heat / cold exposure (current window)
 
@@ -52,8 +52,7 @@ Daily average temperature vs the city's other days (|z| >= 2). Informational: we
 
 | city | day | avg temp C | z-score |
 | --- | --- | ---: | ---: |
-| San Francisco | 2026-11-17 | 10.22 | -2.9 |
-| Chicago | 2026-11-10 | 9.3 | 2.16 |
+| San Francisco | 2026-11-17 | 10.22 | -2.4 |
 
 ![Average temperature by city](avg_temp_by_city.png)
 

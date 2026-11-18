@@ -30,7 +30,8 @@ def main() -> int:
     added = warehouse.refresh(con, rows)
     print(f"warehouse: {added} new rows loaded")
 
-    issues = quality.run_all(con)
+    issues = (quality.run_all(con) + quality.check_all_cities_present(con)
+              + quality.check_fresh_ingest(con))
     for issue in issues:
         print(f"QUALITY ISSUE: {issue}")
 
