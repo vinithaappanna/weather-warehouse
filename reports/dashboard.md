@@ -1,6 +1,6 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-18 12:03 UTC.
+Generated 2026-11-18 15:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -53,6 +53,27 @@ Daily average temperature vs the city's other days (|z| >= 2). Informational: we
 | city | day | avg temp C | z-score |
 | --- | --- | ---: | ---: |
 | San Francisco | 2026-11-17 | 10.22 | -2.4 |
+
+## Precipitation
+
+| city | total mm | wet days (>=1 mm) |
+| --- | ---: | ---: |
+| San Francisco | 115.3 | 5 |
+| Newark | 34.7 | 2 |
+| New York | 25.3 | 2 |
+| Chicago | 16.7 | 4 |
+
+## Severe-weather days
+
+Daily rain >= 10 mm or wind >= 50 km/h (illustrative thresholds).
+
+| city | day | precip mm | max wind km/h | why |
+| --- | --- | ---: | ---: | --- |
+| San Francisco | 2026-11-18 | 85.4 | 30.4 | heavy rain |
+| Chicago | 2026-11-13 | 10.5 | 26.7 | heavy rain |
+| San Francisco | 2026-11-13 | 13.8 | 21.9 | heavy rain |
+| New York | 2026-11-12 | 21.7 | 24.5 | heavy rain |
+| Newark | 2026-11-12 | 31.3 | 30.1 | heavy rain |
 
 ![Average temperature by city](avg_temp_by_city.png)
 

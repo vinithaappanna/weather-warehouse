@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from . import anomalies
+from . import anomalies, extremes
 
 import matplotlib
 
@@ -48,6 +48,24 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| city | day | avg temp C | z-score |", "| --- | --- | ---: | ---: |"]
         for a in unusual:
             lines.append(f"| {a['city']} | {a['day']} | {a['avg_temp_c']} | {a['z']} |")
+    wet = extremes.precip_by_city(con)
+    if wet:
+        lines += ["", "## Precipitation", "", "| city | total mm | wet days (>=1 mm) |",
+                  "| --- | ---: | ---: |"]
+        for city, total, days in wet:
+            lines.append(f"| {city} | {total} | {days} |")
+    severe = extremes.severe_days(con)[:8]
+    lines += ["", "## Severe-weather days", "",
+              f"Daily rain >= {extremes.HEAVY_RAIN_MM:g} mm or wind >= "
+              f"{extremes.STRONG_WIND_KMH:g} km/h (illustrative thresholds)."]
+    if severe:
+        lines += ["", "| city | day | precip mm | max wind km/h | why |",
+                  "| --- | --- | ---: | ---: | --- |"]
+        for a in severe:
+            lines.append(f"| {a['city']} | {a['day']} | {a['precip_mm']} | "
+                         f"{a['max_wind_kmh']} | {a['reasons']} |")
+    else:
+        lines += ["", "None in the current window."]
     lines += [
         "",
         "![Average temperature by city](avg_temp_by_city.png)",
