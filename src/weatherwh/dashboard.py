@@ -50,20 +50,25 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
             lines.append(f"| {a['city']} | {a['day']} | {a['avg_temp_c']} | {a['z']} |")
     wet = extremes.precip_by_city(con)
     if wet:
-        lines += ["", "## Precipitation", "", "| city | total mm | wet days (>=1 mm) |",
+        lines += ["", "## Precipitation", "",
+                  "Model output in mm over the window; the current day includes forecast hours.", "",
+                  "| city | total mm | wet days (>=1 mm) |",
                   "| --- | ---: | ---: |"]
         for city, total, days in wet:
             lines.append(f"| {city} | {total} | {days} |")
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",
               f"Daily rain >= {extremes.HEAVY_RAIN_MM:g} mm or wind >= "
-              f"{extremes.STRONG_WIND_KMH:g} km/h (illustrative thresholds)."]
+              f"{extremes.STRONG_WIND_KMH:g} km/h. Illustrative thresholds, not official "
+              "weather alerts. Values are Open-Meteo model output in mm and km/h per "
+              "city-local day, not gauge observations; a day still in progress includes "
+              "forecast hours."]
     if severe:
-        lines += ["", "| city | day | precip mm | max wind km/h | why |",
-                  "| --- | --- | ---: | ---: | --- |"]
+        lines += ["", "| city | day | precip mm | max wind km/h | why | day status |",
+                  "| --- | --- | ---: | ---: | --- | --- |"]
         for a in severe:
             lines.append(f"| {a['city']} | {a['day']} | {a['precip_mm']} | "
-                         f"{a['max_wind_kmh']} | {a['reasons']} |")
+                         f"{a['max_wind_kmh']} | {a['reasons']} | {a['status']} |")
     else:
         lines += ["", "None in the current window."]
     lines += [

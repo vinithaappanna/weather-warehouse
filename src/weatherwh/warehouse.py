@@ -40,7 +40,13 @@ def ensure_raw_table(con) -> None:
 
 
 def load_raw(con, rows: list[dict]) -> int:
-    """Insert rows, skipping city/hour pairs already loaded (idempotent)."""
+    """Insert new city/hour pairs; returns how many were new.
+
+    Hours already loaded are refreshed in place with the latest fetch: an hour
+    first loaded as a forecast must pick up the model's later values instead
+    of freezing the first forecast forever. Re-loading identical rows changes
+    nothing.
+    """
     ensure_raw_table(con)
     if not rows:
         return 0
@@ -58,6 +64,15 @@ def load_raw(con, rows: list[dict]) -> int:
             SELECT 1 FROM {RAW_TABLE} r
             WHERE r.city = i.city AND r.hour = i.hour
         )
+        """
+    )
+    sets = ", ".join(f"{v} = i.{v}" for v in ("ingested_at", *HOURLY_VARIABLES))
+    changed = " OR ".join(f"r.{v} IS DISTINCT FROM i.{v}" for v in HOURLY_VARIABLES)
+    _run(con,
+        f"""
+        UPDATE {RAW_TABLE} AS r SET {sets}
+        FROM _incoming i
+        WHERE r.city = i.city AND r.hour = i.hour AND ({changed})
         """
     )
     con.unregister("_incoming")
