@@ -43,7 +43,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     unusual = anomalies.load_and_find(con)[:8]
     if unusual:
         lines += ["", "## Unusual days", "",
-                  "Daily average temperature vs the city's other days (|z| >= 2). "
+                  "Completed days only: daily average temperature vs the city's other days (|z| >= 2). "
                   "Informational: weather, not a data-quality failure.", "",
                   "| city | day | avg temp C | z-score |", "| --- | --- | ---: | ---: |"]
         for a in unusual:

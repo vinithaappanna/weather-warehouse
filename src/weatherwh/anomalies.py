@@ -37,8 +37,17 @@ def find_anomalies(rows: list[tuple], threshold: float = 2.0,
     return sorted(out, key=lambda a: (-abs(a["z"]), a["city"], str(a["day"])))
 
 
-def load_and_find(con, **kwargs) -> list[dict]:
+def load_and_find(con, include_in_progress: bool = False,
+                  now_utc=None, **kwargs) -> list[dict]:
+    """Anomalies over the daily mart. By default only completed city-local
+    days are used, for both the flagged day and the baseline: a day still in
+    progress averages forecast hours and a partial day, so it could be flagged
+    (or skew the baseline) for reasons that are not weather."""
+    from .extremes import day_status
+
     rows = con.execute(
         "SELECT city, day, avg_temp_c FROM mart_daily_city ORDER BY city, day"
     ).fetchall()
+    if not include_in_progress:
+        rows = [r for r in rows if day_status(r[0], r[1], now_utc) == "complete"]
     return find_anomalies(rows, **kwargs)
