@@ -129,3 +129,19 @@ def test_revised_hour_flows_to_every_mart_and_dashboard():
     assert extremes.severe_days(con) == []
     assert "40" not in "".join(l for l in dashboard.render_markdown(con).splitlines() if "| A |" in l)
     con.close()
+
+
+def test_plot_precip_renders_and_handles_empty(tmp_path):
+    con = warehouse.connect(":memory:")
+    assert dashboard.plot_precip(_empty(), tmp_path / "e.png") is False
+    load(con, [("A", 1, 3.0, 5.0), ("A", 2, 0.0, 5.0), ("B", 2, 12.0, 5.0)])
+    now = dt.datetime(2026, 11, 2, 15, tzinfo=dt.timezone.utc)   # Nov 2 in progress
+    assert dashboard.plot_precip(con, tmp_path / "p.png", now_utc=now) is True
+    assert (tmp_path / "p.png").stat().st_size > 1000
+    con.close()
+
+
+def _empty():
+    con = warehouse.connect(":memory:")
+    warehouse.refresh(con, [])
+    return con

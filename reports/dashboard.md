@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-19 15:04 UTC.
+Generated 2026-11-19 20:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-19 | 10.7 | 6.0 | 18.1 | 0.0 | 18.8 | 24 |
-| New York | 2026-11-19 | 10.3 | 5.9 | 17.8 | 0.0 | 10.3 | 24 |
-| Newark | 2026-11-19 | 9.85 | 3.7 | 18.5 | 0.0 | 9.0 | 24 |
-| San Francisco | 2026-11-19 | 10.69 | 9.0 | 12.6 | 14.8 | 25.9 | 24 |
+| Chicago | 2026-11-19 | 10.98 | 6.0 | 18.6 | 0.0 | 20.9 | 24 |
+| New York | 2026-11-19 | 10.57 | 5.9 | 17.8 | 0.0 | 9.2 | 24 |
+| Newark | 2026-11-19 | 10.39 | 3.7 | 19.5 | 0.0 | 9.7 | 24 |
+| San Francisco | 2026-11-19 | 10.53 | 8.9 | 13.0 | 10.5 | 16.5 | 24 |
 | Chicago | 2026-11-18 | 7.84 | 2.6 | 15.5 | 0.0 | 18.4 | 24 |
 | New York | 2026-11-18 | 10.6 | 5.1 | 18.4 | 0.0 | 9.3 | 24 |
 | Newark | 2026-11-18 | 10.43 | 3.1 | 19.3 | 0.0 | 10.5 | 24 |
@@ -58,9 +58,11 @@ Completed days only: daily average temperature vs the city's other days (|z| >= 
 
 Model output in mm over the window; the current day includes forecast hours.
 
+![Daily precipitation by city](precip_by_city.png)
+
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
-| San Francisco | 91.1 | 6 |
+| San Francisco | 86.8 | 6 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
 | Chicago | 16.7 | 4 |
@@ -71,7 +73,7 @@ Daily rain >= 10 mm or wind >= 50 km/h. Illustrative thresholds, not official we
 
 | city | day | precip mm | max wind km/h | why | day status |
 | --- | --- | ---: | ---: | --- | --- |
-| San Francisco | 2026-11-19 | 14.8 | 25.9 | heavy rain | in progress (includes forecast hours) |
+| San Francisco | 2026-11-19 | 10.5 | 16.5 | heavy rain | in progress (includes forecast hours) |
 | San Francisco | 2026-11-18 | 46.4 | 29.3 | heavy rain | complete |
 | Chicago | 2026-11-13 | 10.5 | 26.7 | heavy rain | complete |
 | San Francisco | 2026-11-13 | 13.8 | 21.9 | heavy rain | complete |

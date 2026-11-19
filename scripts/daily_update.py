@@ -54,6 +54,8 @@ def main() -> int:
     (REPORTS / "dashboard.md").write_text(dashboard.render_markdown(con), encoding="utf-8")
     if dashboard.plot_avg_temp(con, REPORTS / "avg_temp_by_city.png"):
         print("wrote chart")
+    if dashboard.plot_precip(con, REPORTS / "precip_by_city.png"):
+        print("wrote precip chart")
     print("wrote reports/dashboard.md")
     con.close()
     return 1 if issues else 0

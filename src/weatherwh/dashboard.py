@@ -52,6 +52,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     if wet:
         lines += ["", "## Precipitation", "",
                   "Model output in mm over the window; the current day includes forecast hours.", "",
+                  "![Daily precipitation by city](precip_by_city.png)", "",
                   "| city | total mm | wet days (>=1 mm) |",
                   "| --- | ---: | ---: |"]
         for city, total, days in wet:
@@ -111,6 +112,44 @@ def plot_avg_temp(con, out_path, today: dt.date | None = None) -> bool:
     ax.set_ylabel("deg C")
     ax.legend()
     fig.autofmt_xdate()
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+    return True
+
+
+def plot_precip(con, out_path, now_utc: dt.datetime | None = None) -> bool:
+    """Grouped daily precipitation bars per city. Days still in progress for a
+    city (they include forecast hours) are hatched and lighter so they are not
+    read as observed totals. Model output, mm."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT day, city, total_precip_mm FROM mart_daily_city ORDER BY day, city").fetchall()
+    if not rows:
+        return False
+    days = sorted({r[0] for r in rows})
+    cities = sorted({r[1] for r in rows})
+    val = {(r[0], r[1]): r[2] or 0.0 for r in rows}
+    width = 0.8 / len(cities)
+    fig, ax = plt.subplots(figsize=(9, 4.5))
+    for ci, city in enumerate(cities):
+        color = f"C{ci}"
+        for di, day in enumerate(days):
+            if (day, city) not in val:
+                continue
+            partial = day_status(city, day, now_utc) != "complete"
+            ax.bar(di + ci * width, val[(day, city)], width, color=color,
+                   alpha=0.45 if partial else 1.0, hatch="//" if partial else None,
+                   edgecolor="grey" if partial else color,
+                   label=city if di == 0 or all((d, city) not in val for d in days[:di]) else None)
+    ax.set_xticks([i + 0.4 - width / 2 for i in range(len(days))])
+    ax.set_xticklabels([str(d)[5:] for d in days], rotation=60, fontsize=7)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(dict(zip(labels, handles)).values(), dict(zip(labels, handles)).keys(), fontsize=8)
+    ax.set_ylabel("mm per city-local day")
+    ax.set_title("Daily precipitation by city (Open-Meteo model output)\n"
+                 "hatched = day in progress, includes forecast hours", fontsize=11)
     fig.tight_layout()
     fig.savefig(out_path, dpi=120)
     plt.close(fig)
