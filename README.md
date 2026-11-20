@@ -38,6 +38,7 @@ Tracked cities: Newark, New York, Chicago, San Francisco.
 ```bash
 pip install -r requirements.txt
 python scripts/daily_update.py   # ingest, load, test quality, build dashboard
+python scripts/describe_schema.py          # regenerate docs/data_model.md (tests fail if stale)
 python examples/claims_vs_weather.py            # join synthetic claim counts to the mart (demo only)
 python scripts/query.py city Chicago --days 5   # also: latest, severe (read-only)
 python -m pytest                 # offline test suite (in-memory DuckDB)
