@@ -21,6 +21,19 @@ def check_temperature_sane(con, low=-60.0, high=60.0) -> list[str]:
     return [f"implausible temperature {t}C in {c} at {h}" for c, h, t in rows]
 
 
+def check_precip_wind_sane(con, max_hourly_precip_mm=150.0, max_wind_kmh=250.0) -> list[str]:
+    """Rain and wind must be non-negative and physically plausible per hour.
+    NULLs are skipped (a missing value is not an implausible one); limits are
+    generous sanity bounds, not weather thresholds."""
+    rows = con.execute(
+        "SELECT city, hour, precipitation_mm, wind_kmh FROM stg_hourly "
+        "WHERE precipitation_mm < 0 OR precipitation_mm > ? OR wind_kmh < 0 OR wind_kmh > ? "
+        "ORDER BY city, hour",
+        [max_hourly_precip_mm, max_wind_kmh],
+    ).fetchall()
+    return [f"implausible precipitation {p} mm / wind {w} km/h in {c} at {h}" for c, h, p, w in rows]
+
+
 def check_no_far_future_hours(con, now: dt.datetime | None = None,
                               horizon_hours: int = 24) -> list[str]:
     """Forecast rows legitimately cover the rest of today, so only flag rows
@@ -99,7 +112,7 @@ def latest_available_hour(con) -> dict[str, dt.datetime]:
 
 def run_all(con) -> list[str]:
     issues: list[str] = []
-    for check in (check_no_null_temperatures, check_temperature_sane,
+    for check in (check_no_null_temperatures, check_temperature_sane, check_precip_wind_sane,
                   check_no_far_future_hours, check_full_days):
         issues.extend(check(con))
     return issues

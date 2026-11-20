@@ -195,3 +195,24 @@ def test_stale_ingest_flagged_and_fresh_passes(con):
 def test_fresh_ingest_on_empty_warehouse(con):
     warehouse.ensure_raw_table(con)
     assert quality.check_fresh_ingest(con) == ["no ingest timestamps recorded"]
+
+
+def test_precip_wind_sanity_check_flags_bad_values_and_ignores_nulls_and_boundaries():
+    import datetime as dt
+    from weatherwh import quality
+    con = warehouse.connect(":memory:")
+    base = dt.datetime(2026, 11, 1, 0)
+    def row(i, p, w):
+        h = base + dt.timedelta(hours=i)
+        return dict(city="A", hour=h, ingested_at=h, temperature_2m=8.0, precipitation=p, wind_speed_10m=w)
+    rows = [row(0, 150.0, 250.0),      # exactly at the limits: allowed
+            row(1, 0.0, 5.0),
+            row(2, -1.0, 5.0),         # negative rain
+            row(3, 0.0, 400.0),        # impossible wind
+            row(4, None, None)]        # missing values: not flagged
+    warehouse.refresh(con, rows)
+    issues = quality.check_precip_wind_sane(con)
+    assert len(issues) == 2
+    assert "-1.0" in issues[0] and "400.0" in issues[1]
+    assert any("implausible precipitation" in i for i in quality.run_all(con))   # wired into run_all
+    con.close()
