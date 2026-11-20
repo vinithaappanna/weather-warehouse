@@ -145,3 +145,14 @@ def _empty():
     con = warehouse.connect(":memory:")
     warehouse.refresh(con, [])
     return con
+
+
+def test_plot_wind_renders_with_threshold_and_embeds_in_dashboard(tmp_path):
+    con = warehouse.connect(":memory:")
+    assert dashboard.plot_wind(_empty(), tmp_path / "e.png") is False
+    load(con, [("A", 1, 0.0, 20.0), ("A", 2, 0.0, 70.0), ("B", 2, 0.0, 10.0)])
+    now = dt.datetime(2026, 11, 2, 15, tzinfo=dt.timezone.utc)
+    assert dashboard.plot_wind(con, tmp_path / "w.png", now_utc=now) is True
+    assert (tmp_path / "w.png").stat().st_size > 1000
+    assert "wind_by_city.png" in dashboard.render_markdown(con)
+    con.close()

@@ -56,6 +56,8 @@ def main() -> int:
         print("wrote chart")
     if dashboard.plot_precip(con, REPORTS / "precip_by_city.png"):
         print("wrote precip chart")
+    if dashboard.plot_wind(con, REPORTS / "wind_by_city.png"):
+        print("wrote wind chart")
     print("wrote reports/dashboard.md")
     con.close()
     return 1 if issues else 0

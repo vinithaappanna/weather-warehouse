@@ -59,6 +59,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
             lines.append(f"| {city} | {total} | {days} |")
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",
+              "![Daily peak wind by city](wind_by_city.png)", "",
               f"Daily rain >= {extremes.HEAVY_RAIN_MM:g} mm or wind >= "
               f"{extremes.STRONG_WIND_KMH:g} km/h. Illustrative thresholds, not official "
               "weather alerts. Values are Open-Meteo model output in mm and km/h per "
@@ -118,14 +119,16 @@ def plot_avg_temp(con, out_path, today: dt.date | None = None) -> bool:
     return True
 
 
-def plot_precip(con, out_path, now_utc: dt.datetime | None = None) -> bool:
-    """Grouped daily precipitation bars per city. Days still in progress for a
-    city (they include forecast hours) are hatched and lighter so they are not
-    read as observed totals. Model output, mm."""
+def _plot_daily_bars(con, column: str, out_path, ylabel: str, title: str,
+                     now_utc: dt.datetime | None = None, ref_line: float | None = None,
+                     ref_label: str = "") -> bool:
+    """Grouped daily bars per city for one mart column. Days still in progress
+    for a city (they include forecast hours) are hatched and lighter so they are
+    not read as observed totals. Model output."""
     from .extremes import day_status
 
     rows = con.execute(
-        "SELECT day, city, total_precip_mm FROM mart_daily_city ORDER BY day, city").fetchall()
+        f"SELECT day, city, {column} FROM mart_daily_city ORDER BY day, city").fetchall()
     if not rows:
         return False
     days = sorted({r[0] for r in rows})
@@ -133,6 +136,7 @@ def plot_precip(con, out_path, now_utc: dt.datetime | None = None) -> bool:
     val = {(r[0], r[1]): r[2] or 0.0 for r in rows}
     width = 0.8 / len(cities)
     fig, ax = plt.subplots(figsize=(9, 4.5))
+    seen = set()
     for ci, city in enumerate(cities):
         color = f"C{ci}"
         for di, day in enumerate(days):
@@ -142,15 +146,32 @@ def plot_precip(con, out_path, now_utc: dt.datetime | None = None) -> bool:
             ax.bar(di + ci * width, val[(day, city)], width, color=color,
                    alpha=0.45 if partial else 1.0, hatch="//" if partial else None,
                    edgecolor="grey" if partial else color,
-                   label=city if di == 0 or all((d, city) not in val for d in days[:di]) else None)
+                   label=city if city not in seen else None)
+            seen.add(city)
+    if ref_line is not None:
+        ax.axhline(ref_line, color="black", linestyle="--", linewidth=1, label=ref_label)
     ax.set_xticks([i + 0.4 - width / 2 for i in range(len(days))])
     ax.set_xticklabels([str(d)[5:] for d in days], rotation=60, fontsize=7)
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(dict(zip(labels, handles)).values(), dict(zip(labels, handles)).keys(), fontsize=8)
-    ax.set_ylabel("mm per city-local day")
-    ax.set_title("Daily precipitation by city (Open-Meteo model output)\n"
-                 "hatched = day in progress, includes forecast hours", fontsize=11)
+    ax.legend(fontsize=8)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title + "\nhatched = day in progress, includes forecast hours", fontsize=11)
     fig.tight_layout()
     fig.savefig(out_path, dpi=120)
     plt.close(fig)
     return True
+
+
+def plot_precip(con, out_path, now_utc: dt.datetime | None = None) -> bool:
+    """Daily precipitation per city (mm, model output)."""
+    return _plot_daily_bars(con, "total_precip_mm", out_path, "mm per city-local day",
+                            "Daily precipitation by city (Open-Meteo model output)", now_utc)
+
+
+def plot_wind(con, out_path, now_utc: dt.datetime | None = None) -> bool:
+    """Daily peak wind per city (km/h, model output) with the illustrative
+    strong-wind threshold as a reference line (not an official alert level)."""
+    from .extremes import STRONG_WIND_KMH
+    return _plot_daily_bars(con, "max_wind_kmh", out_path, "peak km/h per city-local day",
+                            "Daily peak wind by city (Open-Meteo model output)", now_utc,
+                            ref_line=STRONG_WIND_KMH,
+                            ref_label=f"{STRONG_WIND_KMH:g} km/h (illustrative, not an alert)")
