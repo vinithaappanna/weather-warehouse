@@ -167,3 +167,15 @@ def test_plot_temp_range_renders_and_embeds(tmp_path):
     assert (tmp_path / "t.png").stat().st_size > 1000
     assert "temp_range_by_city.png" in dashboard.render_markdown(con)
     con.close()
+
+
+def test_daily_leaders_uses_latest_day_complete_everywhere():
+    con = warehouse.connect(":memory:")
+    load(con, [("A", 0, 1.0, 20.0), ("B", 0, 5.0, 10.0), ("A", 1, 0.0, 99.0), ("B", 1, 0.0, 99.0)])
+    now = dt.datetime(2026, 11, 2, 15, tzinfo=dt.timezone.utc)      # day offset 1 is in progress
+    out = dashboard.daily_leaders(con, now_utc=now)
+    assert out["day"] == T0.date()
+    assert out["wettest"]["city"] == "B" and out["windiest"]["city"] == "A"
+    assert out["windiest"]["value"] == 20.0
+    # nothing complete when "now" is before every day ends
+    assert dashboard.daily_leaders(con, now_utc=dt.datetime(2026, 11, 1, 6, tzinfo=dt.timezone.utc)) is None

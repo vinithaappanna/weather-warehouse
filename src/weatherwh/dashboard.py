@@ -11,6 +11,31 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
+def daily_leaders(con, now_utc: dt.datetime | None = None) -> dict | None:
+    """City leaders (warmest, coldest, wettest, windiest) for the most recent
+    day that is complete in every city. In-progress days are skipped because
+    they include forecast hours. Ties break on city name. None when no day is
+    complete everywhere. Model output."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, max_temp_c, min_temp_c, total_precip_mm, max_wind_kmh "
+        "FROM mart_daily_city ORDER BY day DESC, city").fetchall()
+    by_day: dict = {}
+    for r in rows:
+        by_day.setdefault(r[1], []).append(r)
+    for day in sorted(by_day, reverse=True):
+        cs = by_day[day]
+        if all(day_status(c[0], day, now_utc) == "complete" for c in cs):
+            def pick(idx, fn):
+                best = fn(cs, key=lambda c: ((c[idx] if c[idx] is not None else (-1e9 if fn is max else 1e9)), c[0]))
+                return {"city": best[0], "value": best[idx]}
+            return {"day": day,
+                    "warmest": pick(2, max), "coldest": pick(3, min),
+                    "wettest": pick(4, max), "windiest": pick(5, max)}
+    return None
+
+
 def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     generated_at = generated_at or dt.datetime.now(dt.timezone.utc)
     rows = con.execute(
@@ -57,6 +82,14 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| --- | ---: | ---: |"]
         for city, total, days in wet:
             lines.append(f"| {city} | {total} | {days} |")
+    lead = daily_leaders(con, now_utc=None)
+    if lead:
+        lines += ["", f"## City leaders, {lead['day']} (latest day complete in every city)", "",
+                  "Model output, not station readings.", "",
+                  f"- Warmest high: {lead['warmest']['city']} ({lead['warmest']['value']} C)",
+                  f"- Coldest low: {lead['coldest']['city']} ({lead['coldest']['value']} C)",
+                  f"- Wettest: {lead['wettest']['city']} ({lead['wettest']['value']} mm)",
+                  f"- Windiest: {lead['windiest']['city']} ({lead['windiest']['value']} km/h)"]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",

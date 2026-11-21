@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-21 12:04 UTC.
+Generated 2026-11-21 15:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-21 | 12.46 | 7.3 | 20.0 | 0.0 | 16.9 | 24 |
-| New York | 2026-11-21 | 11.3 | 6.7 | 17.3 | 0.0 | 11.3 | 24 |
-| Newark | 2026-11-21 | 11.12 | 6.3 | 17.3 | 0.0 | 11.5 | 24 |
-| San Francisco | 2026-11-21 | 9.63 | 6.9 | 12.8 | 3.1 | 12.7 | 24 |
+| Chicago | 2026-11-21 | 12.6 | 7.2 | 20.5 | 0.0 | 17.7 | 24 |
+| New York | 2026-11-21 | 11.57 | 8.1 | 18.0 | 0.0 | 12.7 | 24 |
+| Newark | 2026-11-21 | 11.26 | 6.7 | 17.8 | 0.0 | 12.7 | 24 |
+| San Francisco | 2026-11-21 | 9.5 | 6.4 | 13.5 | 1.9 | 17.8 | 24 |
 | Chicago | 2026-11-20 | 11.73 | 5.5 | 19.0 | 0.0 | 17.1 | 24 |
 | New York | 2026-11-20 | 13.37 | 7.3 | 21.3 | 0.0 | 9.5 | 24 |
 | Newark | 2026-11-20 | 12.92 | 5.6 | 21.7 | 0.0 | 11.2 | 24 |
@@ -63,10 +63,19 @@ Model output in mm over the window; the current day includes forecast hours.
 
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
-| San Francisco | 90.9 | 8 |
+| San Francisco | 89.7 | 8 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
 | Chicago | 16.7 | 4 |
+
+## City leaders, 2026-11-20 (latest day complete in every city)
+
+Model output, not station readings.
+
+- Warmest high: Newark (21.7 C)
+- Coldest low: Chicago (5.5 C)
+- Wettest: San Francisco (1.4 mm)
+- Windiest: Chicago (17.1 km/h)
 
 ![Daily temperature range by city](temp_range_by_city.png)
 
