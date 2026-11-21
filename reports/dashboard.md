@@ -1,13 +1,17 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-20 20:04 UTC.
+Generated 2026-11-21 12:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-20 | 11.4 | 5.5 | 18.9 | 0.0 | 16.6 | 24 |
-| New York | 2026-11-20 | 12.74 | 7.3 | 20.8 | 0.0 | 11.4 | 24 |
-| Newark | 2026-11-20 | 12.35 | 5.6 | 21.1 | 0.0 | 11.6 | 24 |
-| San Francisco | 2026-11-20 | 9.91 | 7.8 | 12.7 | 1.4 | 13.7 | 24 |
+| Chicago | 2026-11-21 | 12.46 | 7.3 | 20.0 | 0.0 | 16.9 | 24 |
+| New York | 2026-11-21 | 11.3 | 6.7 | 17.3 | 0.0 | 11.3 | 24 |
+| Newark | 2026-11-21 | 11.12 | 6.3 | 17.3 | 0.0 | 11.5 | 24 |
+| San Francisco | 2026-11-21 | 9.63 | 6.9 | 12.8 | 3.1 | 12.7 | 24 |
+| Chicago | 2026-11-20 | 11.73 | 5.5 | 19.0 | 0.0 | 17.1 | 24 |
+| New York | 2026-11-20 | 13.37 | 7.3 | 21.3 | 0.0 | 9.5 | 24 |
+| Newark | 2026-11-20 | 12.92 | 5.6 | 21.7 | 0.0 | 11.2 | 24 |
+| San Francisco | 2026-11-20 | 10.15 | 8.0 | 13.2 | 1.4 | 10.9 | 24 |
 | Chicago | 2026-11-19 | 11.13 | 6.0 | 18.6 | 0.0 | 20.8 | 24 |
 | New York | 2026-11-19 | 10.98 | 5.9 | 18.6 | 0.0 | 8.6 | 24 |
 | Newark | 2026-11-19 | 10.61 | 3.7 | 19.9 | 0.0 | 9.1 | 24 |
@@ -30,10 +34,6 @@ Generated 2026-11-20 20:04 UTC.
 | San Francisco | 2026-11-15 | 12.95 | 11.3 | 15.1 | 3.1 | 14.4 | 24 |
 | Chicago | 2026-11-14 | 2.32 | -0.7 | 6.9 | 1.1 | 16.1 | 24 |
 | New York | 2026-11-14 | 4.66 | 3.0 | 6.8 | 0.0 | 20.5 | 24 |
-| Newark | 2026-11-14 | 4.75 | 3.0 | 6.9 | 0.0 | 21.2 | 24 |
-| San Francisco | 2026-11-14 | 13.44 | 11.3 | 16.9 | 7.5 | 10.2 | 24 |
-| Chicago | 2026-11-13 | 2.53 | 0.7 | 4.7 | 10.5 | 26.7 | 24 |
-| New York | 2026-11-13 | 5.03 | 3.2 | 8.7 | 3.6 | 22.5 | 24 |
 
 ## Heat / cold exposure (current window)
 
@@ -52,7 +52,8 @@ Completed days only: daily average temperature vs the city's other days (|z| >= 
 
 | city | day | avg temp C | z-score |
 | --- | --- | ---: | ---: |
-| Chicago | 2026-11-19 | 11.13 | 2.3 |
+| Chicago | 2026-11-20 | 11.73 | 2.02 |
+| New York | 2026-11-14 | 4.66 | -2.0 |
 
 ## Precipitation
 
@@ -62,10 +63,13 @@ Model output in mm over the window; the current day includes forecast hours.
 
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
-| San Francisco | 87.8 | 7 |
+| San Francisco | 90.9 | 8 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
 | Chicago | 16.7 | 4 |
+
+![Daily temperature range by city](temp_range_by_city.png)
+
 
 ## Severe-weather days
 

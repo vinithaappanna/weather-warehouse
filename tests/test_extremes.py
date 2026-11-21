@@ -156,3 +156,14 @@ def test_plot_wind_renders_with_threshold_and_embeds_in_dashboard(tmp_path):
     assert (tmp_path / "w.png").stat().st_size > 1000
     assert "wind_by_city.png" in dashboard.render_markdown(con)
     con.close()
+
+
+def test_plot_temp_range_renders_and_embeds(tmp_path):
+    con = warehouse.connect(":memory:")
+    assert dashboard.plot_temp_range(_empty(), tmp_path / "e.png") is False
+    load(con, [("A", 1, 0.0, 20.0), ("A", 2, 0.0, 70.0), ("B", 2, 0.0, 10.0)])
+    now = dt.datetime(2026, 11, 2, 15, tzinfo=dt.timezone.utc)
+    assert dashboard.plot_temp_range(con, tmp_path / "t.png", now_utc=now) is True
+    assert (tmp_path / "t.png").stat().st_size > 1000
+    assert "temp_range_by_city.png" in dashboard.render_markdown(con)
+    con.close()

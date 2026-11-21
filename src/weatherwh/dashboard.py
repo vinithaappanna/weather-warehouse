@@ -57,6 +57,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| --- | ---: | ---: |"]
         for city, total, days in wet:
             lines.append(f"| {city} | {total} | {days} |")
+    lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",
               "![Daily peak wind by city](wind_by_city.png)", "",
@@ -175,3 +176,39 @@ def plot_wind(con, out_path, now_utc: dt.datetime | None = None) -> bool:
                             "Daily peak wind by city (Open-Meteo model output)", now_utc,
                             ref_line=STRONG_WIND_KMH,
                             ref_label=f"{STRONG_WIND_KMH:g} km/h (illustrative, not an alert)")
+
+
+def plot_temp_range(con, out_path, now_utc: dt.datetime | None = None) -> bool:
+    """Daily min-max temperature band and mean line per city (deg C, model
+    output). Days still in progress include forecast hours, so their mean
+    marker is hollow and the band is not to be read as an observed range."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, min_temp_c, avg_temp_c, max_temp_c FROM mart_daily_city "
+        "ORDER BY city, day").fetchall()
+    if not rows:
+        return False
+    cities = sorted({r[0] for r in rows})
+    fig, axes = plt.subplots(len(cities), 1, figsize=(9, 2.2 * len(cities)), sharex=True,
+                             squeeze=False)
+    for ax, city in zip(axes[:, 0], cities):
+        pts = [r for r in rows if r[0] == city]
+        x = list(range(len(pts)))
+        ax.fill_between(x, [p[2] for p in pts], [p[4] for p in pts], alpha=0.25)
+        ax.plot(x, [p[3] for p in pts], color="C0", linewidth=1)
+        for i, p in enumerate(pts):
+            partial = day_status(city, p[1], now_utc) != "complete"
+            ax.plot(i, p[3], "o", markersize=4, color="C0",
+                    markerfacecolor="white" if partial else "C0")
+        ax.set_ylabel(city, fontsize=8)
+        ax.grid(alpha=0.3)
+    days = [r[1] for r in rows if r[0] == cities[0]]
+    axes[-1, 0].set_xticks(range(len(days)))
+    axes[-1, 0].set_xticklabels([str(d)[5:] for d in days], rotation=60, fontsize=7)
+    axes[0, 0].set_title("Daily min-max and mean temperature, deg C (Open-Meteo model output)\n"
+                         "hollow marker = day in progress, includes forecast hours", fontsize=10)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+    return True
