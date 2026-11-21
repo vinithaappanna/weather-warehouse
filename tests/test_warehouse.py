@@ -216,3 +216,23 @@ def test_precip_wind_sanity_check_flags_bad_values_and_ignores_nulls_and_boundar
     assert "-1.0" in issues[0] and "400.0" in issues[1]
     assert any("implausible precipitation" in i for i in quality.run_all(con))   # wired into run_all
     con.close()
+
+
+def test_temperature_jump_check_flags_spikes_not_gaps_or_nulls():
+    import datetime as dt
+    from weatherwh import quality
+    con = warehouse.connect(":memory:")
+    base = dt.datetime(2026, 11, 1, 0)
+    def row(h, t, city="A"):
+        hr = base + dt.timedelta(hours=h)
+        return dict(city=city, hour=hr, ingested_at=hr, temperature_2m=t, precipitation=0.0, wind_speed_10m=5.0)
+    rows = [row(0, 10.0), row(1, 25.0),      # +15.0 exactly: allowed
+            row(2, 41.0),                    # +16.0: flagged
+            row(5, -10.0),                   # 3-hour gap: not a jump
+            row(6, None), row(7, 30.0),      # NULL neighbour: skipped
+            row(0, 0.0, "B"), row(1, 3.0, "B")]
+    warehouse.refresh(con, rows)
+    issues = quality.check_temperature_jumps(con)
+    assert len(issues) == 1 and "25.0C to 41.0C" in issues[0] and "A" in issues[0]
+    assert any("jumped" in i for i in quality.run_all(con))
+    con.close()

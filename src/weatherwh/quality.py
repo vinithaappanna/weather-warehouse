@@ -110,9 +110,28 @@ def latest_available_hour(con) -> dict[str, dt.datetime]:
     return dict(con.execute("SELECT city, max(hour) FROM stg_hourly GROUP BY city").fetchall())
 
 
+def check_temperature_jumps(con, max_jump_c: float = 15.0) -> list[str]:
+    """Flag a change of more than max_jump_c between two consecutive hours for
+    one city: usually a bad record or a unit error, rarely real weather. Only
+    hours exactly one apart are compared (a gap is not a jump) and NULLs are
+    skipped. The limit is an illustrative sanity bound."""
+    rows = con.execute(
+        "SELECT city, hour, temperature_c, "
+        "lag(temperature_c) OVER w, lag(hour) OVER w FROM stg_hourly "
+        "WINDOW w AS (PARTITION BY city ORDER BY hour) ORDER BY city, hour"
+    ).fetchall()
+    issues = []
+    for city, hour, t, prev_t, prev_h in rows:
+        if t is None or prev_t is None or prev_h is None:
+            continue
+        if (hour - prev_h) == dt.timedelta(hours=1) and abs(t - prev_t) > max_jump_c:
+            issues.append(f"temperature jumped {prev_t}C to {t}C in one hour in {city} at {hour}")
+    return issues
+
+
 def run_all(con) -> list[str]:
     issues: list[str] = []
     for check in (check_no_null_temperatures, check_temperature_sane, check_precip_wind_sane,
-                  check_no_far_future_hours, check_full_days):
+                  check_no_far_future_hours, check_full_days, check_temperature_jumps):
         issues.extend(check(con))
     return issues
