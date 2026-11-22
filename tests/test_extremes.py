@@ -179,3 +179,18 @@ def test_daily_leaders_uses_latest_day_complete_everywhere():
     assert out["windiest"]["value"] == 20.0
     # nothing complete when "now" is before every day ends
     assert dashboard.daily_leaders(con, now_utc=dt.datetime(2026, 11, 1, 6, tzinfo=dt.timezone.utc)) is None
+
+
+def test_source_freshness_counts_failures_since_last_success():
+    con = warehouse.connect(":memory:")
+    assert dashboard.source_freshness(con) == []
+    load(con, [("A", 0, 0.0, 5.0), ("B", 0, 0.0, 5.0)])
+    t = dt.datetime(2026, 11, 2, 12)
+    warehouse.record_fetch(con, [{"city": "A", "hour": t}, {"city": "B", "hour": t}], ["A", "B"], now=t)
+    # next fetch: A returns nothing (failed/empty), B succeeds again; C never succeeds
+    warehouse.record_fetch(con, [{"city": "B", "hour": t}], ["A", "B", "C"], now=t + dt.timedelta(hours=3))
+    out = {f["city"]: f for f in dashboard.source_freshness(con, now=t + dt.timedelta(hours=5))}
+    assert out["A"]["last_success"] == t and out["A"]["age_hours"] == 5.0 and out["A"]["failed_since"] == 1
+    assert out["B"]["age_hours"] == 2.0 and out["B"]["failed_since"] == 0
+    assert out["C"]["last_success"] is None and out["C"]["age_hours"] is None and out["C"]["failed_since"] == 1
+    assert "## Source freshness" in dashboard.render_markdown(con)

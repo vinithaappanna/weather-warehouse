@@ -36,6 +36,29 @@ def daily_leaders(con, now_utc: dt.datetime | None = None) -> dict | None:
     return None
 
 
+def source_freshness(con, now: dt.datetime | None = None) -> list[dict]:
+    """Per city: last successful fetch (fetch_log, non-empty responses only),
+    its age in hours, the number of failed or empty fetches since that success,
+    and the latest weather hour held (normally in the future: forecast). Empty
+    when nothing has been logged."""
+    now = now or dt.datetime.now()
+    try:
+        rows = con.execute("SELECT city, fetched_at, rows_returned FROM fetch_log ORDER BY city, fetched_at").fetchall()
+    except Exception:
+        return []
+    latest_hour = dict(con.execute("SELECT city, max(hour) FROM stg_hourly GROUP BY city").fetchall())
+    out = []
+    for city in sorted({r[0] for r in rows}):
+        mine = [r for r in rows if r[0] == city]
+        good = [r for r in mine if r[2] and r[2] > 0]
+        last = good[-1][1] if good else None
+        failed_since = sum(1 for r in mine if (last is None or r[1] > last) and not (r[2] and r[2] > 0))
+        out.append({"city": city, "last_success": last,
+                    "age_hours": round((now - last).total_seconds() / 3600, 1) if last else None,
+                    "failed_since": failed_since, "latest_hour": latest_hour.get(city)})
+    return out
+
+
 def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     generated_at = generated_at or dt.datetime.now(dt.timezone.utc)
     rows = con.execute(
@@ -90,6 +113,17 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   f"- Coldest low: {lead['coldest']['city']} ({lead['coldest']['value']} C)",
                   f"- Wettest: {lead['wettest']['city']} ({lead['wettest']['value']} mm)",
                   f"- Windiest: {lead['windiest']['city']} ({lead['windiest']['value']} km/h)"]
+    fresh = source_freshness(con)
+    if fresh:
+        lines += ["", "## Source freshness", "",
+                  "Last successful Open-Meteo fetch per city (empty or failed fetches do not count). "
+                  "The latest hour is normally ahead of now because the feed includes forecast hours.", "",
+                  "| City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |",
+                  "| --- | --- | ---: | ---: | --- |"]
+        for f in fresh:
+            lines.append(f"| {f['city']} | {f['last_success'] or 'never'} | "
+                         f"{f['age_hours'] if f['age_hours'] is not None else '-'} | {f['failed_since']} | "
+                         f"{f['latest_hour'] or '-'} |")
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",

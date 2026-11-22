@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-22 12:07 UTC.
+Generated 2026-11-22 15:07 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-22 | 8.62 | 1.0 | 13.0 | 7.5 | 22.4 | 24 |
-| New York | 2026-11-22 | 13.37 | 12.2 | 15.6 | 5.8 | 16.1 | 24 |
+| Chicago | 2026-11-22 | 9.12 | 1.9 | 13.8 | 0.4 | 19.0 | 24 |
+| New York | 2026-11-22 | 14.33 | 12.2 | 18.9 | 0.0 | 13.4 | 24 |
 | Newark | 2026-11-22 | 13.09 | 11.3 | 15.6 | 4.0 | 12.8 | 24 |
-| San Francisco | 2026-11-22 | 10.12 | 8.0 | 12.3 | 0.0 | 9.9 | 24 |
+| San Francisco | 2026-11-22 | 10.0 | 8.0 | 11.8 | 0.0 | 12.8 | 24 |
 | Chicago | 2026-11-21 | 12.69 | 7.2 | 20.1 | 0.0 | 15.8 | 24 |
 | New York | 2026-11-21 | 12.79 | 8.1 | 19.0 | 0.0 | 10.5 | 24 |
 | Newark | 2026-11-21 | 12.23 | 6.7 | 19.2 | 0.0 | 13.0 | 24 |
@@ -66,8 +66,8 @@ Model output in mm over the window; the current day includes forecast hours.
 | --- | ---: | ---: |
 | San Francisco | 95.8 | 8 |
 | Newark | 38.7 | 3 |
-| New York | 31.1 | 3 |
-| Chicago | 24.2 | 5 |
+| New York | 25.3 | 2 |
+| Chicago | 17.1 | 4 |
 
 ## City leaders, 2026-11-21 (latest day complete in every city)
 
@@ -77,6 +77,17 @@ Model output, not station readings.
 - Coldest low: San Francisco (6.4 C)
 - Wettest: San Francisco (8.0 mm)
 - Windiest: Chicago (15.8 km/h)
+
+## Source freshness
+
+Last successful Open-Meteo fetch per city (empty or failed fetches do not count). The latest hour is normally ahead of now because the feed includes forecast hours.
+
+| City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
+| --- | --- | ---: | ---: | --- |
+| Chicago | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| New York | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| Newark | 2026-11-22 07:07:47.434042 | 3.0 | 1 | 2026-11-22 23:00:00 |
+| San Francisco | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
 
 ![Daily temperature range by city](temp_range_by_city.png)
 
