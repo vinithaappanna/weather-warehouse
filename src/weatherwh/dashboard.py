@@ -59,6 +59,35 @@ def source_freshness(con, now: dt.datetime | None = None) -> list[dict]:
     return out
 
 
+def dry_streaks(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) -> list[dict]:
+    """Per city: current run of consecutive completed days with total rain
+    below wet_mm (a "dry" day), and the longest such run in the data.
+    In-progress days are skipped (they include forecast hours). Model output;
+    wet_mm is illustrative, not a drought measure."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, total_precip_mm FROM mart_daily_city ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, mm in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day, mm or 0.0))
+    out = []
+    for city, days in sorted(per.items()):
+        current = 0
+        for _day, mm in reversed(days):
+            if mm < wet_mm:
+                current += 1
+            else:
+                break
+        longest = run = 0
+        for _day, mm in days:
+            run = run + 1 if mm < wet_mm else 0
+            longest = max(longest, run)
+        out.append({"city": city, "current_dry_days": current, "longest_dry_days": longest})
+    return out
+
+
 def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     generated_at = generated_at or dt.datetime.now(dt.timezone.utc)
     rows = con.execute(
@@ -124,6 +153,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
             lines.append(f"| {f['city']} | {f['last_success'] or 'never'} | "
                          f"{f['age_hours'] if f['age_hours'] is not None else '-'} | {f['failed_since']} | "
                          f"{f['latest_hour'] or '-'} |")
+    streaks = dry_streaks(con)
+    if streaks:
+        lines += ["", "## Dry-day streaks (rain under 1 mm)", "",
+                  "Consecutive completed days below 1 mm of rain. Model output; illustrative, not a drought measure.", "",
+                  "| City | Current streak (days) | Longest streak (days) |", "| --- | ---: | ---: |"]
+        for d in streaks:
+            lines.append(f"| {d['city']} | {d['current_dry_days']} | {d['longest_dry_days']} |")
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",

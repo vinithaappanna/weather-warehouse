@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-22 15:07 UTC.
+Generated 2026-11-22 20:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-22 | 9.12 | 1.9 | 13.8 | 0.4 | 19.0 | 24 |
-| New York | 2026-11-22 | 14.33 | 12.2 | 18.9 | 0.0 | 13.4 | 24 |
-| Newark | 2026-11-22 | 13.09 | 11.3 | 15.6 | 4.0 | 12.8 | 24 |
-| San Francisco | 2026-11-22 | 10.0 | 8.0 | 11.8 | 0.0 | 12.8 | 24 |
+| Chicago | 2026-11-22 | 8.98 | 1.2 | 13.3 | 1.8 | 19.7 | 24 |
+| New York | 2026-11-22 | 13.4 | 12.2 | 15.8 | 0.7 | 12.9 | 24 |
+| Newark | 2026-11-22 | 13.04 | 11.3 | 16.0 | 0.0 | 11.2 | 24 |
+| San Francisco | 2026-11-22 | 10.19 | 8.2 | 12.1 | 0.0 | 11.1 | 24 |
 | Chicago | 2026-11-21 | 12.69 | 7.2 | 20.1 | 0.0 | 15.8 | 24 |
 | New York | 2026-11-21 | 12.79 | 8.1 | 19.0 | 0.0 | 10.5 | 24 |
 | Newark | 2026-11-21 | 12.23 | 6.7 | 19.2 | 0.0 | 13.0 | 24 |
@@ -65,9 +65,9 @@ Model output in mm over the window; the current day includes forecast hours.
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
 | San Francisco | 95.8 | 8 |
-| Newark | 38.7 | 3 |
-| New York | 25.3 | 2 |
-| Chicago | 17.1 | 4 |
+| Newark | 34.7 | 2 |
+| New York | 26.0 | 2 |
+| Chicago | 18.5 | 5 |
 
 ## City leaders, 2026-11-21 (latest day complete in every city)
 
@@ -84,10 +84,21 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
-| New York | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
-| Newark | 2026-11-22 07:07:47.434042 | 3.0 | 1 | 2026-11-22 23:00:00 |
-| San Francisco | 2026-11-22 10:07:23.162390 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| Chicago | 2026-11-22 15:04:56.176526 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| New York | 2026-11-22 15:04:56.176526 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| Newark | 2026-11-22 15:04:56.176526 | 0.0 | 0 | 2026-11-22 23:00:00 |
+| San Francisco | 2026-11-22 15:04:56.176526 | 0.0 | 0 | 2026-11-22 23:00:00 |
+
+## Dry-day streaks (rain under 1 mm)
+
+Consecutive completed days below 1 mm of rain. Model output; illustrative, not a drought measure.
+
+| City | Current streak (days) | Longest streak (days) |
+| --- | ---: | ---: |
+| Chicago | 7 | 7 |
+| New York | 8 | 8 |
+| Newark | 8 | 8 |
+| San Francisco | 0 | 4 |
 
 ![Daily temperature range by city](temp_range_by_city.png)
 

@@ -194,3 +194,20 @@ def test_source_freshness_counts_failures_since_last_success():
     assert out["B"]["age_hours"] == 2.0 and out["B"]["failed_since"] == 0
     assert out["C"]["last_success"] is None and out["C"]["age_hours"] is None and out["C"]["failed_since"] == 1
     assert "## Source freshness" in dashboard.render_markdown(con)
+
+
+def test_dry_streaks_current_and_longest_complete_days_only():
+    con = warehouse.connect(":memory:")
+    # A: dry, dry, wet, dry, dry; B: wet, dry
+    load(con, [("A", 0, 0.0, 5.0), ("A", 1, 0.5, 5.0), ("A", 2, 3.0, 5.0),
+               ("A", 3, 0.0, 5.0), ("A", 4, 0.2, 5.0),
+               ("B", 3, 2.0, 5.0), ("B", 4, 0.0, 5.0)])
+    now = dt.datetime(2026, 11, 5, 12, tzinfo=dt.timezone.utc)   # day offset 4 is in progress
+    out = {d["city"]: d for d in dashboard.dry_streaks(con, now_utc=now)}
+    assert out["A"] == {"city": "A", "current_dry_days": 1, "longest_dry_days": 2}   # 11-04 dry, 11-03 wet
+    assert out["B"]["longest_dry_days"] == 0
+    # with a later "now" day 4 completes: A's current streak is 2
+    later = dt.datetime(2026, 11, 6, 12, tzinfo=dt.timezone.utc)
+    out2 = {d["city"]: d for d in dashboard.dry_streaks(con, now_utc=later)}
+    assert out2["A"]["current_dry_days"] == 2 and out2["B"]["current_dry_days"] == 1
+    assert "Dry-day streaks" in dashboard.render_markdown(con)
