@@ -17,11 +17,11 @@ REPORTS = ROOT / "reports"
 
 
 def main() -> int:
-    rows = []
+    rows, fetch_failures = ingest.fetch_all(config.CITIES)
     for city in config.CITIES:
-        city_rows = ingest.fetch_city_hourly(city)
-        print(f"{city.name}: fetched {len(city_rows)} hourly rows")
-        rows.extend(city_rows)
+        n = sum(1 for r in rows if r["city"] == city.name)
+        if n:
+            print(f"{city.name}: fetched {n} hourly rows")
 
     (ROOT / "data").mkdir(exist_ok=True)
     REPORTS.mkdir(exist_ok=True)
@@ -34,7 +34,7 @@ def main() -> int:
     # Freshness is evaluated right after this run's own ingest, so the overnight
     # gap between rounds (3pm to 7am) cannot trip it: each run loads new hours stamped
     # now. It fails only if a run loads nothing new for over 6h (a stalled upstream).
-    issues = (quality.run_all(con) + quality.check_all_cities_present(con)
+    issues = (fetch_failures + quality.run_all(con) + quality.check_all_cities_present(con)
               + quality.check_fresh_fetch(con))
     for city, hr in sorted(quality.latest_available_hour(con).items()):
         print(f"latest available hour {city}: {hr}")

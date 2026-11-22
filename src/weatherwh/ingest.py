@@ -67,3 +67,20 @@ def flatten_payload(city: City, payload: dict, ingested_at: dt.datetime) -> list
             row[var] = values[i] if i < len(values) else None
         rows.append(row)
     return rows
+
+
+def fetch_all(cities, fetch=None) -> tuple[list[dict], list[str]]:
+    """Fetch every city, tolerating per-city failures. Returns (rows, failures):
+    one unreachable city must not discard the others' fresh data. Failures are
+    returned as messages so the caller can fail the quality gate; the failed
+    city logs no successful fetch, so source-fetch freshness keeps flagging it
+    once its last good fetch is too old."""
+    fetch = fetch or fetch_city_hourly
+    rows: list[dict] = []
+    failures: list[str] = []
+    for city in cities:
+        try:
+            rows.extend(fetch(city))
+        except IngestError as exc:
+            failures.append(f"fetch failed for {city.name}: {exc}")
+    return rows, failures

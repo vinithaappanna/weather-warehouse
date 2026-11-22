@@ -101,3 +101,21 @@ def test_fetch_gives_up_after_max_attempts():
     with pytest.raises(ingest.IngestError):
         ingest.fetch_city_hourly(NEWARK, session=session, max_attempts=3, backoff_s=0)
     assert session.n == 3
+
+
+def test_fetch_all_keeps_good_cities_and_reports_failures():
+    from types import SimpleNamespace as NS
+    from weatherwh.ingest import IngestError, fetch_all
+    cities = [NS(name="A"), NS(name="B"), NS(name="C")]
+    def fake(city):
+        if city.name == "B":
+            raise IngestError("Open-Meteo unreachable for B after 3 attempts: timeout")
+        return [{"city": city.name, "hour": 1}]
+    rows, failures = fetch_all(cities, fetch=fake)
+    assert [r["city"] for r in rows] == ["A", "C"]
+    assert len(failures) == 1 and failures[0].startswith("fetch failed for B")
+    assert fetch_all([], fetch=fake) == ([], [])
+    # non-ingest bugs are not swallowed
+    import pytest
+    with pytest.raises(KeyError):
+        fetch_all(cities, fetch=lambda c: (_ for _ in ()).throw(KeyError("bug")))
