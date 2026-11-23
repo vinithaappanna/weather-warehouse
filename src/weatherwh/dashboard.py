@@ -88,6 +88,37 @@ def dry_streaks(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) ->
     return out
 
 
+def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
+    """Total rain per city over completed days only (in-progress days include
+    forecast hours and would skew totals). Bars annotated with the number of
+    completed days counted. Model output."""
+    from .extremes import day_status
+
+    rows = con.execute("SELECT city, day, total_precip_mm FROM mart_daily_city ORDER BY city, day").fetchall()
+    if not rows:
+        return False
+    per: dict[str, list] = {}
+    for city, day, mm in rows:
+        if day_status(city, day, now_utc) == "complete":
+            a = per.setdefault(city, [0.0, 0])
+            a[0] += mm or 0.0
+            a[1] += 1
+    if not per:
+        return False
+    cities = sorted(per)
+    fig, ax = plt.subplots(figsize=(7.5, 3.6))
+    bars = ax.bar(cities, [per[c][0] for c in cities], color="#1971c2")
+    for bar, c in zip(bars, cities):
+        ax.annotate(f"{per[c][1]} days", (bar.get_x() + bar.get_width() / 2, bar.get_height()),
+                    ha="center", va="bottom", fontsize=8)
+    ax.set_ylabel("total rain (mm)")
+    ax.set_title("Total rain per city over completed days (Open-Meteo model output)")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+    return True
+
+
 def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     generated_at = generated_at or dt.datetime.now(dt.timezone.utc)
     rows = con.execute(
@@ -160,6 +191,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Current streak (days) | Longest streak (days) |", "| --- | ---: | ---: |"]
         for d in streaks:
             lines.append(f"| {d['city']} | {d['current_dry_days']} | {d['longest_dry_days']} |")
+    lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
     lines += ["", "## Severe-weather days", "",

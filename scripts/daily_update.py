@@ -56,6 +56,8 @@ def main() -> int:
         print("wrote chart")
     if dashboard.plot_precip(con, REPORTS / "precip_by_city.png"):
         print("wrote precip chart")
+    if dashboard.plot_rain_totals(con, REPORTS / "rain_totals.png"):
+        print("wrote rain totals chart")
     if dashboard.plot_temp_range(con, REPORTS / "temp_range_by_city.png"):
         print("wrote temperature chart")
     if dashboard.plot_wind(con, REPORTS / "wind_by_city.png"):

@@ -211,3 +211,13 @@ def test_dry_streaks_current_and_longest_complete_days_only():
     out2 = {d["city"]: d for d in dashboard.dry_streaks(con, now_utc=later)}
     assert out2["A"]["current_dry_days"] == 2 and out2["B"]["current_dry_days"] == 1
     assert "Dry-day streaks" in dashboard.render_markdown(con)
+
+
+def test_plot_rain_totals_completed_days_only(tmp_path):
+    con = warehouse.connect(":memory:")
+    assert dashboard.plot_rain_totals(_empty(), tmp_path / "e.png") is False
+    load(con, [("A", 0, 2.0, 5.0), ("A", 1, 1.0, 5.0), ("B", 0, 0.5, 5.0)])
+    now = dt.datetime(2026, 11, 2, 12, tzinfo=dt.timezone.utc)   # day offset 1 in progress: excluded
+    assert dashboard.plot_rain_totals(con, tmp_path / "r.png", now_utc=now) is True
+    assert (tmp_path / "r.png").stat().st_size > 1000
+    assert "rain_totals.png" in dashboard.render_markdown(con)
