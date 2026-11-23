@@ -236,3 +236,19 @@ def test_temperature_records_complete_days_only():
     assert "Warmest and coldest completed days" in dashboard.render_markdown(con)
     assert dashboard.temperature_records(_empty()) == []
     con.close()
+
+
+def test_week_over_week_temp_windows_and_omission():
+    con = warehouse.connect(":memory:")
+    temps = [10.0] * 3 + [14.0] * 3          # days=3: previous 10, latest 14
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d, t in enumerate(temps)]
+    rows += [{"city": "B", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+              "temperature_2m": 5.0, "precipitation": 0.0, "wind_speed_10m": 5.0} for d in range(4)]
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 10, 12, tzinfo=dt.timezone.utc)   # all days complete
+    out = dashboard.week_over_week_temp(con, now_utc=now, days=3)
+    assert out == [{"city": "A", "current_c": 14.0, "previous_c": 10.0, "change_c": 4.0}]   # B too short
+    assert dashboard.week_over_week_temp(_empty()) == []
+    con.close()

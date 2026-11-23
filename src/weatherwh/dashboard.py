@@ -110,6 +110,31 @@ def temperature_records(con, now_utc: dt.datetime | None = None) -> list[dict]:
     return out
 
 
+def week_over_week_temp(con, now_utc: dt.datetime | None = None, days: int = 7) -> list[dict]:
+    """Per city: mean of daily average temperature over the latest `days`
+    completed days vs the `days` before them, and the change. Cities without
+    2*days completed days are omitted. Model output; compares two short
+    windows, not a climate trend."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city "
+        "WHERE avg_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, avg in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append(avg)
+    out = []
+    for city, vals in sorted(per.items()):
+        if len(vals) < 2 * days:
+            continue
+        cur = sum(vals[-days:]) / days
+        prev = sum(vals[-2 * days:-days]) / days
+        out.append({"city": city, "current_c": round(cur, 2), "previous_c": round(prev, 2),
+                    "change_c": round(cur - prev, 2)})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -222,6 +247,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
         for t in temps:
             lines.append(f"| {t['city']} | {t['warmest_day']} | {t['warmest_c']} | "
                          f"{t['coldest_day']} | {t['coldest_c']} | {t['days']} |")
+    wow = week_over_week_temp(con)
+    if wow:
+        lines += ["", "## Week over week temperature", "",
+                  "Mean daily average temperature, latest 7 completed days vs the 7 before. Two short windows, model output.", "",
+                  "| City | Latest 7 days (C) | Previous 7 days (C) | Change (C) |", "| --- | ---: | ---: | ---: |"]
+        for w in wow:
+            lines.append(f"| {w['city']} | {w['current_c']} | {w['previous_c']} | {w['change_c']:+.2f} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
