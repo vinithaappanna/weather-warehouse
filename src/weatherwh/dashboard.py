@@ -88,6 +88,28 @@ def dry_streaks(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) ->
     return out
 
 
+def temperature_records(con, now_utc: dt.datetime | None = None) -> list[dict]:
+    """Per city, the warmest and coldest completed day by average temperature
+    (in-progress days are skipped: they include forecast hours). Model
+    output, within the data window only, not climatological records."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city "
+        "WHERE avg_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, avg in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day, avg))
+    out = []
+    for city, days in sorted(per.items()):
+        warm = max(days, key=lambda d: (d[1], d[0]))
+        cold = min(days, key=lambda d: (d[1], d[0]))
+        out.append({"city": city, "warmest_day": warm[0], "warmest_c": warm[1],
+                    "coldest_day": cold[0], "coldest_c": cold[1], "days": len(days)})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -191,6 +213,15 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Current streak (days) | Longest streak (days) |", "| --- | ---: | ---: |"]
         for d in streaks:
             lines.append(f"| {d['city']} | {d['current_dry_days']} | {d['longest_dry_days']} |")
+    temps = temperature_records(con)
+    if temps:
+        lines += ["", "## Warmest and coldest completed days", "",
+                  "By daily average temperature, within the current data window only. Model output, not climate records.", "",
+                  "| City | Warmest day | Avg C | Coldest day | Avg C | Days compared |",
+                  "| --- | --- | ---: | --- | ---: | ---: |"]
+        for t in temps:
+            lines.append(f"| {t['city']} | {t['warmest_day']} | {t['warmest_c']} | "
+                         f"{t['coldest_day']} | {t['coldest_c']} | {t['days']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

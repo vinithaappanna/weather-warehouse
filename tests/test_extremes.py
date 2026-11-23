@@ -221,3 +221,18 @@ def test_plot_rain_totals_completed_days_only(tmp_path):
     assert dashboard.plot_rain_totals(con, tmp_path / "r.png", now_utc=now) is True
     assert (tmp_path / "r.png").stat().st_size > 1000
     assert "rain_totals.png" in dashboard.render_markdown(con)
+
+
+def test_temperature_records_complete_days_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d, t in [(0, 8.0), (1, 15.0), (2, 3.0), (3, 30.0)]]
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 4, 12, tzinfo=dt.timezone.utc)   # day offset 3 in progress: excluded
+    out = dashboard.temperature_records(con, now_utc=now)
+    assert out == [{"city": "A", "warmest_day": dt.date(2026, 11, 2), "warmest_c": 15.0,
+                    "coldest_day": dt.date(2026, 11, 3), "coldest_c": 3.0, "days": 3}]
+    assert "Warmest and coldest completed days" in dashboard.render_markdown(con)
+    assert dashboard.temperature_records(_empty()) == []
+    con.close()
