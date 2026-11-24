@@ -157,6 +157,19 @@ def degree_days(con, now_utc: dt.datetime | None = None, base_c: float = 18.0) -
     return [dict(a, hdd=round(a["hdd"], 1), cdd=round(a["cdd"], 1)) for _c, a in sorted(per.items())]
 
 
+def wettest_days(con, now_utc: dt.datetime | None = None, n: int = 5) -> list[dict]:
+    """The n wettest completed city-days by total precipitation (days with
+    no rain are skipped). Model output; in-progress days excluded."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, total_precip_mm FROM mart_daily_city "
+        "WHERE total_precip_mm > 0 ORDER BY total_precip_mm DESC, day DESC, city").fetchall()
+    out = [{"city": c, "day": d, "precip_mm": mm} for c, d, mm in rows
+           if day_status(c, d, now_utc) == "complete"]
+    return out[:n]
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -284,6 +297,12 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Heating degree days | Cooling degree days |", "| --- | ---: | ---: | ---: |"]
         for d in dd:
             lines.append(f"| {d['city']} | {d['days']} | {d['hdd']} | {d['cdd']} |")
+    wet = wettest_days(con)
+    if wet:
+        lines += ["", "## Wettest completed days", "", "Model output, current window only.", "",
+                  "| City | Day | Precip (mm) |", "| --- | --- | ---: |"]
+        for w in wet:
+            lines.append(f"| {w['city']} | {w['day']} | {w['precip_mm']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

@@ -266,3 +266,14 @@ def test_degree_days_base_completed_days_and_render():
     assert "Degree days (base 18 C)" in dashboard.render_markdown(con)
     assert dashboard.degree_days(_empty()) == []
     con.close()
+
+
+def test_wettest_days_order_skips_dry_and_in_progress():
+    con = warehouse.connect(":memory:")
+    load(con, [("A", 0, 1.0, 5.0), ("A", 1, 0.0, 5.0), ("B", 0, 3.0, 5.0), ("B", 2, 9.0, 5.0)])
+    now = dt.datetime(2026, 11, 3, 12, tzinfo=dt.timezone.utc)   # offset 2 in progress
+    out = dashboard.wettest_days(con, now_utc=now)
+    assert [(w["city"], w["precip_mm"]) for w in out] == [("B", 3.0), ("A", 1.0)]
+    assert all(w["precip_mm"] > 0 for w in out) and dashboard.wettest_days(con, now_utc=now, n=1)[0]["city"] == "B"
+    assert dashboard.wettest_days(_empty()) == []
+    con.close()

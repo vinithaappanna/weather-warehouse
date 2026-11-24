@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-24 12:06 UTC.
+Generated 2026-11-24 15:05 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-24 | 0.86 | -1.8 | 3.2 | 0.7 | 18.4 | 24 |
-| New York | 2026-11-24 | 6.14 | 0.5 | 9.9 | 0.0 | 22.7 | 24 |
-| Newark | 2026-11-24 | 6.37 | 0.8 | 10.0 | 0.0 | 23.7 | 24 |
-| San Francisco | 2026-11-24 | 11.79 | 8.0 | 15.9 | 0.0 | 17.6 | 24 |
+| Chicago | 2026-11-24 | 1.13 | -1.8 | 3.5 | 0.0 | 19.5 | 24 |
+| New York | 2026-11-24 | 6.15 | 0.5 | 9.9 | 0.0 | 26.5 | 24 |
+| Newark | 2026-11-24 | 6.41 | 0.9 | 10.0 | 0.0 | 25.5 | 24 |
+| San Francisco | 2026-11-24 | 11.82 | 8.1 | 15.8 | 0.0 | 22.0 | 24 |
 | Chicago | 2026-11-23 | 1.32 | -1.1 | 5.5 | 0.0 | 16.6 | 24 |
 | New York | 2026-11-23 | 15.39 | 10.2 | 20.9 | 0.0 | 20.6 | 24 |
 | Newark | 2026-11-23 | 15.54 | 10.5 | 21.5 | 0.0 | 20.2 | 24 |
@@ -41,7 +41,7 @@ Hours at or above 30C / at or below 0C and degree-hours beyond each threshold. I
 
 | city | heat hours | cold hours | heat degree-hours | cold degree-hours |
 | --- | ---: | ---: | ---: | ---: |
-| Chicago | 0 | 36 | 0.0 | 26.7 |
+| Chicago | 0 | 36 | 0.0 | 26.5 |
 | New York | 0 | 0 | 0.0 | 0.0 |
 | Newark | 0 | 0 | 0.0 | 0.0 |
 | San Francisco | 0 | 0 | 0.0 | 0.0 |
@@ -67,7 +67,7 @@ Model output in mm over the window; the current day includes forecast hours.
 | San Francisco | 95.8 | 8 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
-| Chicago | 19.2 | 5 |
+| Chicago | 18.5 | 5 |
 
 ## City leaders, 2026-11-23 (latest day complete in every city)
 
@@ -84,10 +84,10 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-24 07:06:05.916490 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| New York | 2026-11-24 07:06:05.916490 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| Newark | 2026-11-24 07:06:05.916490 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| San Francisco | 2026-11-24 07:06:05.916490 | 0.0 | 0 | 2026-11-24 23:00:00 |
+| Chicago | 2026-11-24 10:05:34.832609 | 0.0 | 0 | 2026-11-24 23:00:00 |
+| New York | 2026-11-24 10:05:34.832609 | 0.0 | 0 | 2026-11-24 23:00:00 |
+| Newark | 2026-11-24 10:05:34.832609 | 0.0 | 0 | 2026-11-24 23:00:00 |
+| San Francisco | 2026-11-24 10:05:34.832609 | 0.0 | 0 | 2026-11-24 23:00:00 |
 
 ## Dry-day streaks (rain under 1 mm)
 
@@ -132,6 +132,18 @@ Heating degree days sum how far each completed day's average fell below 18 C; co
 | New York | 15 | 112.1 | 0.0 |
 | Newark | 15 | 114.9 | 0.0 |
 | San Francisco | 15 | 83.1 | 0.0 |
+
+## Wettest completed days
+
+Model output, current window only.
+
+| City | Day | Precip (mm) |
+| --- | --- | ---: |
+| San Francisco | 2026-11-18 | 46.4 |
+| Newark | 2026-11-12 | 31.3 |
+| New York | 2026-11-12 | 21.7 |
+| San Francisco | 2026-11-13 | 13.8 |
+| Chicago | 2026-11-13 | 10.5 |
 
 ![Total rain per city](rain_totals.png)
 
