@@ -170,6 +170,19 @@ def wettest_days(con, now_utc: dt.datetime | None = None, n: int = 5) -> list[di
     return out[:n]
 
 
+def windiest_days(con, now_utc: dt.datetime | None = None, n: int = 5) -> list[dict]:
+    """The n windiest completed city-days by maximum hourly wind speed.
+    Model output; in-progress days excluded."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, max_wind_kmh FROM mart_daily_city "
+        "WHERE max_wind_kmh IS NOT NULL ORDER BY max_wind_kmh DESC, day DESC, city").fetchall()
+    out = [{"city": c, "day": d, "max_wind_kmh": w} for c, d, w in rows
+           if day_status(c, d, now_utc) == "complete"]
+    return out[:n]
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -303,6 +316,12 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Day | Precip (mm) |", "| --- | --- | ---: |"]
         for w in wet:
             lines.append(f"| {w['city']} | {w['day']} | {w['precip_mm']} |")
+    windy = windiest_days(con)
+    if windy:
+        lines += ["", "## Windiest completed days", "", "Maximum hourly wind speed. Model output, current window only.", "",
+                  "| City | Day | Max wind (km/h) |", "| --- | --- | ---: |"]
+        for w in windy:
+            lines.append(f"| {w['city']} | {w['day']} | {w['max_wind_kmh']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

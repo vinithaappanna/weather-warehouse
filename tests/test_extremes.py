@@ -277,3 +277,14 @@ def test_wettest_days_order_skips_dry_and_in_progress():
     assert all(w["precip_mm"] > 0 for w in out) and dashboard.wettest_days(con, now_utc=now, n=1)[0]["city"] == "B"
     assert dashboard.wettest_days(_empty()) == []
     con.close()
+
+
+def test_windiest_days_order_and_in_progress_excluded():
+    con = warehouse.connect(":memory:")
+    load(con, [("A", 0, 0.0, 30.0), ("B", 0, 0.0, 60.0), ("A", 2, 0.0, 99.0)])
+    now = dt.datetime(2026, 11, 3, 12, tzinfo=dt.timezone.utc)   # offset 2 in progress
+    out = dashboard.windiest_days(con, now_utc=now)
+    assert [(w["city"], w["max_wind_kmh"]) for w in out] == [("B", 60.0), ("A", 30.0)]
+    assert dashboard.windiest_days(con, now_utc=now, n=1)[0]["city"] == "B"
+    assert dashboard.windiest_days(_empty()) == []
+    con.close()
