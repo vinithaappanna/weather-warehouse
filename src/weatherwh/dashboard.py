@@ -135,6 +135,28 @@ def week_over_week_temp(con, now_utc: dt.datetime | None = None, days: int = 7) 
     return out
 
 
+def degree_days(con, now_utc: dt.datetime | None = None, base_c: float = 18.0) -> list[dict]:
+    """Per city over completed days: heating degree days (sum of base minus
+    daily average temperature where the day is colder than base) and cooling
+    degree days (the reverse). A common load proxy for energy and exposure
+    analysis; base 18 C is illustrative, and values are model output over the
+    current data window only."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city "
+        "WHERE avg_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, dict] = {}
+    for city, day, avg in rows:
+        if day_status(city, day, now_utc) != "complete":
+            continue
+        a = per.setdefault(city, {"city": city, "days": 0, "hdd": 0.0, "cdd": 0.0})
+        a["days"] += 1
+        a["hdd"] += max(0.0, base_c - avg)
+        a["cdd"] += max(0.0, avg - base_c)
+    return [dict(a, hdd=round(a["hdd"], 1), cdd=round(a["cdd"], 1)) for _c, a in sorted(per.items())]
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -254,6 +276,14 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Latest 7 days (C) | Previous 7 days (C) | Change (C) |", "| --- | ---: | ---: | ---: |"]
         for w in wow:
             lines.append(f"| {w['city']} | {w['current_c']} | {w['previous_c']} | {w['change_c']:+.2f} |")
+    dd = degree_days(con)
+    if dd:
+        lines += ["", "## Degree days (base 18 C)", "",
+                  "Heating degree days sum how far each completed day's average fell below 18 C; cooling degree days the reverse. "
+                  "Illustrative base, model output, current window only.", "",
+                  "| City | Days | Heating degree days | Cooling degree days |", "| --- | ---: | ---: | ---: |"]
+        for d in dd:
+            lines.append(f"| {d['city']} | {d['days']} | {d['hdd']} | {d['cdd']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

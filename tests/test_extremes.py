@@ -252,3 +252,17 @@ def test_week_over_week_temp_windows_and_omission():
     assert out == [{"city": "A", "current_c": 14.0, "previous_c": 10.0, "change_c": 4.0}]   # B too short
     assert dashboard.week_over_week_temp(_empty()) == []
     con.close()
+
+
+def test_degree_days_base_completed_days_and_render():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d, t in [(0, 8.0), (1, 20.0), (2, 18.0), (3, 40.0)]]
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 4, 12, tzinfo=dt.timezone.utc)   # day offset 3 in progress: excluded
+    assert dashboard.degree_days(con, now_utc=now) == [{"city": "A", "days": 3, "hdd": 10.0, "cdd": 2.0}]
+    assert dashboard.degree_days(con, now_utc=now, base_c=10.0) == [{"city": "A", "days": 3, "hdd": 2.0, "cdd": 18.0}]
+    assert "Degree days (base 18 C)" in dashboard.render_markdown(con)
+    assert dashboard.degree_days(_empty()) == []
+    con.close()
