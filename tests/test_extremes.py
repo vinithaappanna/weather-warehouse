@@ -304,3 +304,17 @@ def test_temperature_volatility_adjacent_days_only():
                     "max_change_day": dt.date(2026, 11, 2)}]
     assert dashboard.temperature_volatility(_empty()) == []
     con.close()
+
+
+def test_frost_days_threshold_inclusive_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d, t in [(0, 0.0), (1, 5.0), (2, -3.0), (3, -20.0)]]       # day 3 in progress
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 4, 12, tzinfo=dt.timezone.utc)
+    assert dashboard.frost_days(con, now_utc=now) == [
+        {"city": "A", "days": 3, "frost_days": 2, "share": 0.6667, "coldest_c": -3.0, "coldest_day": dt.date(2026, 11, 3)}]
+    assert dashboard.frost_days(con, now_utc=now, freeze_c=-5.0)[0]["frost_days"] == 0
+    assert dashboard.frost_days(_empty()) == []
+    con.close()

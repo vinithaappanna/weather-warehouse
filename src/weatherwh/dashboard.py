@@ -209,6 +209,29 @@ def temperature_volatility(con, now_utc: dt.datetime | None = None) -> list[dict
     return out
 
 
+def frost_days(con, now_utc: dt.datetime | None = None, freeze_c: float = 0.0) -> list[dict]:
+    """Per city over completed days: days whose minimum temperature was at or
+    below freeze_c, the share of completed days, and the coldest minimum with
+    its date. Model output, current window only."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, min_temp_c FROM mart_daily_city "
+        "WHERE min_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, lo in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day, lo))
+    out = []
+    for city, days in sorted(per.items()):
+        frosty = [d for d in days if d[1] <= freeze_c]
+        cold = min(days, key=lambda d: (d[1], d[0]))
+        out.append({"city": city, "days": len(days), "frost_days": len(frosty),
+                    "share": round(len(frosty) / len(days), 4),
+                    "coldest_c": cold[1], "coldest_day": cold[0]})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -355,6 +378,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Day pairs | Mean change (C) | Largest swing (C) | On |", "| --- | ---: | ---: | ---: | --- |"]
         for v in vol:
             lines.append(f"| {v['city']} | {v['pairs']} | {v['mean_change_c']} | {v['max_change_c']} | {v['max_change_day']} |")
+    frost = frost_days(con)
+    if frost:
+        lines += ["", "## Frost days (minimum at or below 0 C)", "",
+                  "Completed days only. Model output, current window only.", "",
+                  "| City | Days | Frost days | Share | Coldest minimum (C) | On |", "| --- | ---: | ---: | ---: | ---: | --- |"]
+        for f in frost:
+            lines.append(f"| {f['city']} | {f['days']} | {f['frost_days']} | {f['share']:.1%} | {f['coldest_c']} | {f['coldest_day']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
