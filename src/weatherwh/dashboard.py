@@ -183,6 +183,32 @@ def windiest_days(con, now_utc: dt.datetime | None = None, n: int = 5) -> list[d
     return out[:n]
 
 
+def temperature_volatility(con, now_utc: dt.datetime | None = None) -> list[dict]:
+    """Per city over completed days: mean absolute change in daily average
+    temperature between consecutive days (C) and the largest single-day swing
+    with its date. Gaps in days are not bridged (only calendar-adjacent days
+    count). Model output, current window only."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city "
+        "WHERE avg_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, avg in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day, avg))
+    out = []
+    for city, days in sorted(per.items()):
+        swings = [(abs(b[1] - a[1]), b[0]) for a, b in zip(days, days[1:]) if (b[0] - a[0]).days == 1]
+        if not swings:
+            continue
+        big = max(swings, key=lambda x: (x[0], x[1]))
+        out.append({"city": city, "pairs": len(swings),
+                    "mean_change_c": round(sum(x[0] for x in swings) / len(swings), 2),
+                    "max_change_c": round(big[0], 2), "max_change_day": big[1]})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -322,6 +348,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Day | Max wind (km/h) |", "| --- | --- | ---: |"]
         for w in windy:
             lines.append(f"| {w['city']} | {w['day']} | {w['max_wind_kmh']} |")
+    vol = temperature_volatility(con)
+    if vol:
+        lines += ["", "## Day-to-day temperature volatility", "",
+                  "Mean absolute change in daily average temperature between consecutive completed days. Model output, current window only.", "",
+                  "| City | Day pairs | Mean change (C) | Largest swing (C) | On |", "| --- | ---: | ---: | ---: | --- |"]
+        for v in vol:
+            lines.append(f"| {v['city']} | {v['pairs']} | {v['mean_change_c']} | {v['max_change_c']} | {v['max_change_day']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

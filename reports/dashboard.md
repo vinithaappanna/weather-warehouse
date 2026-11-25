@@ -1,13 +1,17 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-24 20:05 UTC.
+Generated 2026-11-25 12:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-24 | 1.28 | -1.8 | 4.1 | 0.0 | 19.1 | 24 |
-| New York | 2026-11-24 | 6.35 | 0.6 | 9.9 | 0.0 | 23.5 | 24 |
-| Newark | 2026-11-24 | 6.71 | 1.2 | 10.0 | 0.0 | 24.6 | 24 |
-| San Francisco | 2026-11-24 | 11.45 | 7.9 | 15.3 | 0.4 | 21.7 | 24 |
+| Chicago | 2026-11-25 | 2.96 | 0.8 | 4.9 | 0.0 | 27.9 | 24 |
+| New York | 2026-11-25 | 4.08 | -0.5 | 7.9 | 0.0 | 17.5 | 24 |
+| Newark | 2026-11-25 | 3.96 | -0.6 | 7.8 | 0.0 | 17.3 | 24 |
+| San Francisco | 2026-11-25 | 13.19 | 11.4 | 15.0 | 3.3 | 9.4 | 24 |
+| Chicago | 2026-11-24 | 1.35 | -1.8 | 4.5 | 0.0 | 18.8 | 24 |
+| New York | 2026-11-24 | 6.8 | 2.1 | 10.0 | 0.0 | 23.5 | 24 |
+| Newark | 2026-11-24 | 7.12 | 2.6 | 10.1 | 0.0 | 24.6 | 24 |
+| San Francisco | 2026-11-24 | 11.52 | 7.9 | 14.9 | 5.0 | 10.4 | 24 |
 | Chicago | 2026-11-23 | 1.32 | -1.1 | 5.5 | 0.0 | 16.6 | 24 |
 | New York | 2026-11-23 | 15.39 | 10.2 | 20.9 | 0.0 | 20.6 | 24 |
 | Newark | 2026-11-23 | 15.54 | 10.5 | 21.5 | 0.0 | 20.2 | 24 |
@@ -30,10 +34,6 @@ Generated 2026-11-24 20:05 UTC.
 | San Francisco | 2026-11-19 | 10.85 | 8.8 | 12.7 | 10.1 | 15.9 | 24 |
 | Chicago | 2026-11-18 | 7.84 | 2.6 | 15.5 | 0.0 | 18.4 | 24 |
 | New York | 2026-11-18 | 10.6 | 5.1 | 18.4 | 0.0 | 9.3 | 24 |
-| Newark | 2026-11-18 | 10.43 | 3.1 | 19.3 | 0.0 | 10.5 | 24 |
-| San Francisco | 2026-11-18 | 11.58 | 10.4 | 13.6 | 46.4 | 29.3 | 24 |
-| Chicago | 2026-11-17 | 5.49 | 0.5 | 12.5 | 0.0 | 11.3 | 24 |
-| New York | 2026-11-17 | 8.38 | 3.1 | 14.8 | 0.0 | 11.3 | 24 |
 
 ## Heat / cold exposure (current window)
 
@@ -41,20 +41,10 @@ Hours at or above 30C / at or below 0C and degree-hours beyond each threshold. I
 
 | city | heat hours | cold hours | heat degree-hours | cold degree-hours |
 | --- | ---: | ---: | ---: | ---: |
-| Chicago | 0 | 36 | 0.0 | 26.3 |
-| New York | 0 | 0 | 0.0 | 0.0 |
-| Newark | 0 | 0 | 0.0 | 0.0 |
+| Chicago | 0 | 19 | 0.0 | 20.3 |
+| New York | 0 | 3 | 0.0 | 0.8 |
+| Newark | 0 | 3 | 0.0 | 1.4 |
 | San Francisco | 0 | 0 | 0.0 | 0.0 |
-
-## Unusual days
-
-Completed days only: daily average temperature vs the city's other days (|z| >= 2). Informational: weather, not a data-quality failure.
-
-| city | day | avg temp C | z-score |
-| --- | --- | ---: | ---: |
-| New York | 2026-11-14 | 4.66 | -2.14 |
-| Newark | 2026-11-14 | 4.75 | -2.08 |
-| Newark | 2026-11-13 | 4.81 | -2.05 |
 
 ## Precipitation
 
@@ -64,19 +54,19 @@ Model output in mm over the window; the current day includes forecast hours.
 
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
-| San Francisco | 96.2 | 8 |
+| San Francisco | 104.1 | 10 |
 | Newark | 34.7 | 2 |
 | New York | 25.3 | 2 |
 | Chicago | 18.5 | 5 |
 
-## City leaders, 2026-11-23 (latest day complete in every city)
+## City leaders, 2026-11-24 (latest day complete in every city)
 
 Model output, not station readings.
 
-- Warmest high: Newark (21.5 C)
-- Coldest low: Chicago (-1.1 C)
-- Wettest: San Francisco (0.0 mm)
-- Windiest: New York (20.6 km/h)
+- Warmest high: San Francisco (14.9 C)
+- Coldest low: Chicago (-1.8 C)
+- Wettest: San Francisco (5.0 mm)
+- Windiest: Newark (24.6 km/h)
 
 ## Source freshness
 
@@ -84,10 +74,10 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-24 15:05:01.359741 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| New York | 2026-11-24 15:05:01.359741 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| Newark | 2026-11-24 15:05:01.359741 | 0.0 | 0 | 2026-11-24 23:00:00 |
-| San Francisco | 2026-11-24 15:05:01.359741 | 0.0 | 0 | 2026-11-24 23:00:00 |
+| Chicago | 2026-11-25 07:04:33.786222 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| New York | 2026-11-25 07:04:33.786222 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| Newark | 2026-11-25 07:04:33.786222 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| San Francisco | 2026-11-25 07:04:33.786222 | 0.0 | 0 | 2026-11-25 23:00:00 |
 
 ## Dry-day streaks (rain under 1 mm)
 
@@ -95,10 +85,10 @@ Consecutive completed days below 1 mm of rain. Model output; illustrative, not a
 
 | City | Current streak (days) | Longest streak (days) |
 | --- | ---: | ---: |
-| Chicago | 1 | 7 |
-| New York | 10 | 10 |
-| Newark | 10 | 10 |
-| San Francisco | 2 | 4 |
+| Chicago | 2 | 7 |
+| New York | 11 | 11 |
+| Newark | 11 | 11 |
+| San Francisco | 0 | 4 |
 
 ## Warmest and coldest completed days
 
@@ -106,10 +96,10 @@ By daily average temperature, within the current data window only. Model output,
 
 | City | Warmest day | Avg C | Coldest day | Avg C | Days compared |
 | --- | --- | ---: | --- | ---: | ---: |
-| Chicago | 2026-11-21 | 12.69 | 2026-11-23 | 1.32 | 15 |
-| New York | 2026-11-23 | 15.39 | 2026-11-14 | 4.66 | 15 |
-| Newark | 2026-11-23 | 15.54 | 2026-11-14 | 4.75 | 15 |
-| San Francisco | 2026-11-11 | 16.03 | 2026-11-23 | 9.25 | 15 |
+| Chicago | 2026-11-21 | 12.69 | 2026-11-23 | 1.32 | 16 |
+| New York | 2026-11-23 | 15.39 | 2026-11-14 | 4.66 | 16 |
+| Newark | 2026-11-23 | 15.54 | 2026-11-14 | 4.75 | 16 |
+| San Francisco | 2026-11-11 | 16.03 | 2026-11-23 | 9.25 | 16 |
 
 ## Week over week temperature
 
@@ -117,10 +107,10 @@ Mean daily average temperature, latest 7 completed days vs the 7 before. Two sho
 
 | City | Latest 7 days (C) | Previous 7 days (C) | Change (C) |
 | --- | ---: | ---: | ---: |
-| Chicago | 8.48 | 4.95 | +3.53 |
-| New York | 12.18 | 8.66 | +3.52 |
-| Newark | 11.93 | 8.53 | +3.40 |
-| San Francisco | 10.28 | 14.25 | -3.97 |
+| Chicago | 7.89 | 4.4 | +3.48 |
+| New York | 11.95 | 8.11 | +3.85 |
+| Newark | 11.75 | 7.97 | +3.78 |
+| San Francisco | 10.43 | 13.49 | -3.06 |
 
 ## Degree days (base 18 C)
 
@@ -128,10 +118,10 @@ Heating degree days sum how far each completed day's average fell below 18 C; co
 
 | City | Days | Heating degree days | Cooling degree days |
 | --- | ---: | ---: | ---: |
-| Chicago | 15 | 167.8 | 0.0 |
-| New York | 15 | 112.1 | 0.0 |
-| Newark | 15 | 114.9 | 0.0 |
-| San Francisco | 15 | 83.1 | 0.0 |
+| Chicago | 16 | 184.5 | 0.0 |
+| New York | 16 | 123.3 | 0.0 |
+| Newark | 16 | 125.8 | 0.0 |
+| San Francisco | 16 | 89.6 | 0.0 |
 
 ## Wettest completed days
 
@@ -156,6 +146,17 @@ Maximum hourly wind speed. Model output, current window only.
 | Chicago | 2026-11-11 | 29.4 |
 | San Francisco | 2026-11-18 | 29.3 |
 | Newark | 2026-11-09 | 26.8 |
+
+## Day-to-day temperature volatility
+
+Mean absolute change in daily average temperature between consecutive completed days. Model output, current window only.
+
+| City | Day pairs | Mean change (C) | Largest swing (C) | On |
+| --- | ---: | ---: | ---: | --- |
+| Chicago | 15 | 1.99 | 7.83 | 2026-11-23 |
+| New York | 15 | 2.03 | 8.59 | 2026-11-24 |
+| Newark | 15 | 1.97 | 8.42 | 2026-11-24 |
+| San Francisco | 15 | 0.89 | 2.27 | 2026-11-24 |
 
 ![Total rain per city](rain_totals.png)
 

@@ -288,3 +288,19 @@ def test_windiest_days_order_and_in_progress_excluded():
     assert dashboard.windiest_days(con, now_utc=now, n=1)[0]["city"] == "B"
     assert dashboard.windiest_days(_empty()) == []
     con.close()
+
+
+def test_temperature_volatility_adjacent_days_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d, t in [(0, 10.0), (1, 14.0), (2, 13.0), (5, 30.0)]]      # day 5 not adjacent to day 2
+    rows += [{"city": "B", "hour": T0, "ingested_at": T0, "temperature_2m": 5.0,
+              "precipitation": 0.0, "wind_speed_10m": 5.0}]                 # single day: omitted
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 10, 12, tzinfo=dt.timezone.utc)
+    out = dashboard.temperature_volatility(con, now_utc=now)
+    assert out == [{"city": "A", "pairs": 2, "mean_change_c": 2.5, "max_change_c": 4.0,
+                    "max_change_day": dt.date(2026, 11, 2)}]
+    assert dashboard.temperature_volatility(_empty()) == []
+    con.close()
