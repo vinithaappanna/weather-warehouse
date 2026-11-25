@@ -318,3 +318,19 @@ def test_frost_days_threshold_inclusive_completed_only():
     assert dashboard.frost_days(con, now_utc=now, freeze_c=-5.0)[0]["frost_days"] == 0
     assert dashboard.frost_days(_empty()) == []
     con.close()
+
+
+def test_city_temp_correlation_pairs_and_skips():
+    con = warehouse.connect(":memory:")
+    rows = []
+    for d in range(6):
+        for city, t in [("A", float(d)), ("B", 2.0 * d + 1), ("C", float(-d)), ("D", 5.0)]:
+            rows.append({"city": city, "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+                         "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0})
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 20, 12, tzinfo=dt.timezone.utc)
+    got = {(r["city_a"], r["city_b"]): r["r"] for r in dashboard.city_temp_correlation(con, now_utc=now)}
+    assert got == {("A", "B"): 1.0, ("A", "C"): -1.0, ("B", "C"): -1.0}   # D constant, skipped
+    assert dashboard.city_temp_correlation(con, now_utc=now, min_days=7) == []
+    assert dashboard.city_temp_correlation(_empty()) == []
+    con.close()

@@ -232,6 +232,33 @@ def frost_days(con, now_utc: dt.datetime | None = None, freeze_c: float = 0.0) -
     return out
 
 
+def city_temp_correlation(con, now_utc: dt.datetime | None = None, min_days: int = 5) -> list[dict]:
+    """Pearson correlation of daily mean temperature between each pair of
+    cities, over completed days both cities share. Pairs with fewer than
+    min_days shared days or a constant series are skipped. Model output."""
+    import statistics
+    from itertools import combinations
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city WHERE avg_temp_c IS NOT NULL").fetchall()
+    per: dict[str, dict] = {}
+    for city, day, t in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, {})[day] = t
+    out = []
+    for a, b in combinations(sorted(per), 2):
+        shared = sorted(set(per[a]) & set(per[b]))
+        if len(shared) < min_days:
+            continue
+        xs, ys = [per[a][d] for d in shared], [per[b][d] for d in shared]
+        if len(set(xs)) < 2 or len(set(ys)) < 2:
+            continue
+        out.append({"city_a": a, "city_b": b, "days": len(shared),
+                    "r": round(statistics.correlation(xs, ys), 3)})
+    return sorted(out, key=lambda r: (-r["r"], r["city_a"], r["city_b"]))
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -385,6 +412,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Frost days | Share | Coldest minimum (C) | On |", "| --- | ---: | ---: | ---: | ---: | --- |"]
         for f in frost:
             lines.append(f"| {f['city']} | {f['days']} | {f['frost_days']} | {f['share']:.1%} | {f['coldest_c']} | {f['coldest_day']} |")
+    corr = city_temp_correlation(con)
+    if corr:
+        lines += ["", "## City temperature co-movement", "",
+                  "Pearson r of daily mean temperature over shared completed days. Short window, model output: descriptive only, not a climate relationship.", "",
+                  "| City A | City B | Shared days | r |", "| --- | --- | ---: | ---: |"]
+        for c in corr:
+            lines.append(f"| {c['city_a']} | {c['city_b']} | {c['days']} | {c['r']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

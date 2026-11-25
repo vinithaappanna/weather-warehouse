@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-25 15:04 UTC.
+Generated 2026-11-25 20:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-25 | 2.86 | 0.7 | 4.2 | 0.0 | 28.6 | 24 |
-| New York | 2026-11-25 | 3.91 | -0.1 | 7.3 | 0.0 | 17.5 | 24 |
-| Newark | 2026-11-25 | 3.94 | -0.3 | 7.6 | 0.0 | 18.1 | 24 |
-| San Francisco | 2026-11-25 | 13.14 | 11.2 | 15.7 | 3.3 | 9.5 | 24 |
+| Chicago | 2026-11-25 | 3.17 | 0.7 | 4.7 | 0.0 | 29.0 | 24 |
+| New York | 2026-11-25 | 3.36 | -0.1 | 6.3 | 0.0 | 18.7 | 24 |
+| Newark | 2026-11-25 | 3.58 | -0.3 | 7.7 | 0.0 | 17.4 | 24 |
+| San Francisco | 2026-11-25 | 13.13 | 11.5 | 15.5 | 3.3 | 11.1 | 24 |
 | Chicago | 2026-11-24 | 1.35 | -1.8 | 4.5 | 0.0 | 18.8 | 24 |
 | New York | 2026-11-24 | 6.8 | 2.1 | 10.0 | 0.0 | 23.5 | 24 |
 | Newark | 2026-11-24 | 7.12 | 2.6 | 10.1 | 0.0 | 24.6 | 24 |
@@ -74,10 +74,10 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-25 10:04:07.476694 | 0.0 | 0 | 2026-11-25 23:00:00 |
-| New York | 2026-11-25 10:04:07.476694 | 0.0 | 0 | 2026-11-25 23:00:00 |
-| Newark | 2026-11-25 10:04:07.476694 | 0.0 | 0 | 2026-11-25 23:00:00 |
-| San Francisco | 2026-11-25 10:04:07.476694 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| Chicago | 2026-11-25 15:04:08.036621 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| New York | 2026-11-25 15:04:08.036621 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| Newark | 2026-11-25 15:04:08.036621 | 0.0 | 0 | 2026-11-25 23:00:00 |
+| San Francisco | 2026-11-25 15:04:08.036621 | 0.0 | 0 | 2026-11-25 23:00:00 |
 
 ## Dry-day streaks (rain under 1 mm)
 
@@ -168,6 +168,19 @@ Completed days only. Model output, current window only.
 | New York | 16 | 0 | 0.0% | 2.1 | 2026-11-16 |
 | Newark | 16 | 0 | 0.0% | 1.9 | 2026-11-16 |
 | San Francisco | 16 | 0 | 0.0% | 5.5 | 2026-11-23 |
+
+## City temperature co-movement
+
+Pearson r of daily mean temperature over shared completed days. Short window, model output: descriptive only, not a climate relationship.
+
+| City A | City B | Shared days | r |
+| --- | --- | ---: | ---: |
+| New York | Newark | 16 | 0.998 |
+| Chicago | New York | 16 | 0.582 |
+| Chicago | Newark | 16 | 0.542 |
+| Chicago | San Francisco | 16 | -0.139 |
+| New York | San Francisco | 16 | -0.169 |
+| Newark | San Francisco | 16 | -0.175 |
 
 ![Total rain per city](rain_totals.png)
 
