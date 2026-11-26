@@ -56,3 +56,7 @@ past days are the model's `past_days` output, not ground-station observations.
 Embedded, zero-ops, and speaks great SQL - the same layered-model pattern
 (raw -> staging -> marts) used with Snowflake/BigQuery/dbt, but runnable on a
 laptop in seconds.
+
+## Committing
+
+`scripts/safe_commit.sh "message"` runs the test suite and commits only if it passes (fail-closed: a failing test, a collection error or no passing tests blocks the commit). It does not push.

@@ -298,7 +298,9 @@ def diurnal_range(con, now_utc: dt.datetime | None = None) -> list[dict]:
 def breezy_days(con, now_utc: dt.datetime | None = None, threshold_kmh: float = 25.0) -> list[dict]:
     """Per city over completed days: days whose peak hourly wind reached
     threshold_kmh (inclusive), the share of completed days, and the peak day.
-    Threshold is illustrative, not an advisory level. Model output."""
+    The 25 km/h default is an illustrative choice made after inspecting this
+    sample (30 km/h showed no hits in it); it is not an established standard or
+    advisory level, and zero hits is a valid result. Model output."""
     from .extremes import day_status
 
     rows = con.execute(
@@ -494,7 +496,7 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
     breezy = breezy_days(con)
     if breezy:
         lines += ["", "## Breezy days (peak wind at or above 25 km/h)", "",
-                  "Completed days only. Threshold is illustrative, not an advisory level. Model output, current window only.", "",
+                  "Completed days only. The 25 km/h cut-off is an illustrative choice made after inspecting this sample (30 km/h showed no hits in it), not an established standard or advisory level; zero hits is a valid result. Model output, current window only.", "",
                   "| City | Days | Breezy days | Share | Peak (km/h) | On |", "| --- | ---: | ---: | ---: | ---: | --- |"]
         for b in breezy:
             lines.append(f"| {b['city']} | {b['days']} | {b['breezy_days']} | {b['share']:.1%} | {b['peak_kmh']} | {b['peak_day']} |")
