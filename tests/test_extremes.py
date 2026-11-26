@@ -334,3 +334,17 @@ def test_city_temp_correlation_pairs_and_skips():
     assert dashboard.city_temp_correlation(con, now_utc=now, min_days=7) == []
     assert dashboard.city_temp_correlation(_empty()) == []
     con.close()
+
+
+def test_data_coverage_counts_short_days_and_skips_in_progress():
+    con = warehouse.connect(":memory:")
+    rows = []
+    for d in range(3):                       # day 0 full, day 1 has 20 hours, day 2 in progress
+        for h in range(24 if d == 0 else 20 if d == 1 else 5):
+            rows.append({"city": "A", "hour": T0 + dt.timedelta(days=d, hours=h), "ingested_at": T0,
+                         "temperature_2m": 1.0, "precipitation": 0.0, "wind_speed_10m": 5.0})
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 3, 3, tzinfo=dt.timezone.utc)
+    assert dashboard.data_coverage(con, now_utc=now) == [{"city": "A", "days": 2, "short_days": 1, "missing_hours": 4}]
+    assert dashboard.data_coverage(_empty()) == []
+    con.close()

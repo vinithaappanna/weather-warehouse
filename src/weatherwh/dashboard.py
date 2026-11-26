@@ -259,6 +259,22 @@ def city_temp_correlation(con, now_utc: dt.datetime | None = None, min_days: int
     return sorted(out, key=lambda r: (-r["r"], r["city_a"], r["city_b"]))
 
 
+def data_coverage(con, now_utc: dt.datetime | None = None, full_hours: int = 24) -> list[dict]:
+    """Per city over completed days: days observed, days with fewer than
+    full_hours hourly readings, and total missing hours. A pipeline-health
+    view: gaps here would bias every daily statistic above it."""
+    from .extremes import day_status
+
+    rows = con.execute("SELECT city, day, hours_observed FROM mart_daily_city").fetchall()
+    per: dict[str, list] = {}
+    for city, day, hours in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append(hours or 0)
+    return [{"city": c, "days": len(h), "short_days": sum(x < full_hours for x in h),
+             "missing_hours": sum(max(full_hours - x, 0) for x in h)}
+            for c, h in sorted(per.items())]
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -419,6 +435,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City A | City B | Shared days | r |", "| --- | --- | ---: | ---: |"]
         for c in corr:
             lines.append(f"| {c['city_a']} | {c['city_b']} | {c['days']} | {c['r']} |")
+    cov = data_coverage(con)
+    if cov:
+        lines += ["", "## Data coverage", "",
+                  "Completed days only. A short day has fewer than 24 hourly readings; any gaps would bias the daily statistics above.", "",
+                  "| City | Days | Short days | Missing hours |", "| --- | ---: | ---: | ---: |"]
+        for c in cov:
+            lines.append(f"| {c['city']} | {c['days']} | {c['short_days']} | {c['missing_hours']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
