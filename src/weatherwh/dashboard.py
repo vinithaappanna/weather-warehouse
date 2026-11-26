@@ -295,6 +295,28 @@ def diurnal_range(con, now_utc: dt.datetime | None = None) -> list[dict]:
     return out
 
 
+def breezy_days(con, now_utc: dt.datetime | None = None, threshold_kmh: float = 25.0) -> list[dict]:
+    """Per city over completed days: days whose peak hourly wind reached
+    threshold_kmh (inclusive), the share of completed days, and the peak day.
+    Threshold is illustrative, not an advisory level. Model output."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, max_wind_kmh FROM mart_daily_city "
+        "WHERE max_wind_kmh IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, w in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day, w))
+    out = []
+    for city, days in sorted(per.items()):
+        peak = max(days, key=lambda d: (d[1], -d[0].toordinal()))
+        hits = sum(d[1] >= threshold_kmh for d in days)
+        out.append({"city": city, "days": len(days), "breezy_days": hits,
+                    "share": round(hits / len(days), 4), "peak_kmh": peak[1], "peak_day": peak[0]})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -469,6 +491,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Mean range (C) | Widest (C) | On |", "| --- | ---: | ---: | ---: | --- |"]
         for r in dr:
             lines.append(f"| {r['city']} | {r['days']} | {r['mean_range_c']} | {r['widest_c']} | {r['widest_day']} |")
+    breezy = breezy_days(con)
+    if breezy:
+        lines += ["", "## Breezy days (peak wind at or above 25 km/h)", "",
+                  "Completed days only. Threshold is illustrative, not an advisory level. Model output, current window only.", "",
+                  "| City | Days | Breezy days | Share | Peak (km/h) | On |", "| --- | ---: | ---: | ---: | ---: | --- |"]
+        for b in breezy:
+            lines.append(f"| {b['city']} | {b['days']} | {b['breezy_days']} | {b['share']:.1%} | {b['peak_kmh']} | {b['peak_day']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-26 15:04 UTC.
+Generated 2026-11-26 20:05 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-26 | 5.51 | 4.1 | 6.9 | 8.0 | 31.2 | 24 |
-| New York | 2026-11-26 | 7.17 | 5.8 | 10.6 | 52.0 | 48.8 | 24 |
-| Newark | 2026-11-26 | 6.61 | 4.6 | 10.4 | 46.4 | 39.0 | 24 |
-| San Francisco | 2026-11-26 | 12.43 | 10.1 | 16.0 | 0.0 | 9.5 | 24 |
+| Chicago | 2026-11-26 | 5.31 | 4.1 | 6.3 | 13.3 | 40.2 | 24 |
+| New York | 2026-11-26 | 7.08 | 5.8 | 11.9 | 46.8 | 43.9 | 24 |
+| Newark | 2026-11-26 | 6.38 | 4.6 | 11.4 | 43.2 | 33.6 | 24 |
+| San Francisco | 2026-11-26 | 12.28 | 10.1 | 15.5 | 0.0 | 10.2 | 24 |
 | Chicago | 2026-11-25 | 3.34 | 0.7 | 5.4 | 0.0 | 29.0 | 24 |
 | New York | 2026-11-25 | 3.47 | -0.1 | 5.9 | 0.0 | 18.1 | 24 |
 | Newark | 2026-11-25 | 3.49 | -0.3 | 6.9 | 0.0 | 19.4 | 24 |
@@ -65,9 +65,9 @@ Model output in mm over the window; the current day includes forecast hours.
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
 | San Francisco | 104.1 | 10 |
-| Newark | 81.1 | 3 |
-| New York | 77.3 | 3 |
-| Chicago | 26.5 | 6 |
+| Newark | 77.9 | 3 |
+| New York | 72.1 | 3 |
+| Chicago | 31.8 | 6 |
 
 ## City leaders, 2026-11-25 (latest day complete in every city)
 
@@ -84,10 +84,10 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-26 10:04:55.579922 | 0.0 | 0 | 2026-11-26 23:00:00 |
-| New York | 2026-11-26 10:04:55.579922 | 0.0 | 0 | 2026-11-26 23:00:00 |
-| Newark | 2026-11-26 10:04:55.579922 | 0.0 | 0 | 2026-11-26 23:00:00 |
-| San Francisco | 2026-11-26 10:04:55.579922 | 0.0 | 0 | 2026-11-26 23:00:00 |
+| Chicago | 2026-11-26 15:05:01.686349 | 0.0 | 0 | 2026-11-26 23:00:00 |
+| New York | 2026-11-26 15:05:01.686349 | 0.0 | 0 | 2026-11-26 23:00:00 |
+| Newark | 2026-11-26 15:05:01.686349 | 0.0 | 0 | 2026-11-26 23:00:00 |
+| San Francisco | 2026-11-26 15:05:01.686349 | 0.0 | 0 | 2026-11-26 23:00:00 |
 
 ## Dry-day streaks (rain under 1 mm)
 
@@ -214,6 +214,17 @@ Maximum minus minimum temperature per completed day. Model output, current windo
 | Newark | 17 | 9.8 | 16.2 | 2026-11-18 |
 | San Francisco | 17 | 6.6 | 12.3 | 2026-11-10 |
 
+## Breezy days (peak wind at or above 25 km/h)
+
+Completed days only. Threshold is illustrative, not an advisory level. Model output, current window only.
+
+| City | Days | Breezy days | Share | Peak (km/h) | On |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Chicago | 17 | 4 | 23.5% | 29.4 | 2026-11-11 |
+| New York | 17 | 1 | 5.9% | 29.9 | 2026-11-09 |
+| Newark | 17 | 2 | 11.8% | 30.1 | 2026-11-12 |
+| San Francisco | 17 | 1 | 5.9% | 29.3 | 2026-11-18 |
+
 ![Total rain per city](rain_totals.png)
 
 
@@ -228,14 +239,14 @@ Daily rain >= 10 mm or wind >= 50 km/h. Illustrative thresholds, not official we
 
 | city | day | precip mm | max wind km/h | why | day status |
 | --- | --- | ---: | ---: | --- | --- |
-| New York | 2026-11-26 | 52.0 | 48.8 | heavy rain | in progress (includes forecast hours) |
-| Newark | 2026-11-26 | 46.4 | 39.0 | heavy rain | in progress (includes forecast hours) |
+| Chicago | 2026-11-26 | 13.3 | 40.2 | heavy rain | in progress (includes forecast hours) |
+| New York | 2026-11-26 | 46.8 | 43.9 | heavy rain | in progress (includes forecast hours) |
+| Newark | 2026-11-26 | 43.2 | 33.6 | heavy rain | in progress (includes forecast hours) |
 | San Francisco | 2026-11-19 | 10.1 | 15.9 | heavy rain | complete |
 | San Francisco | 2026-11-18 | 46.4 | 29.3 | heavy rain | complete |
 | Chicago | 2026-11-13 | 10.5 | 26.7 | heavy rain | complete |
 | San Francisco | 2026-11-13 | 13.8 | 21.9 | heavy rain | complete |
 | New York | 2026-11-12 | 21.7 | 24.5 | heavy rain | complete |
-| Newark | 2026-11-12 | 31.3 | 30.1 | heavy rain | complete |
 
 ![Average temperature by city](avg_temp_by_city.png)
 

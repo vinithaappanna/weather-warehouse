@@ -363,3 +363,17 @@ def test_diurnal_range_mean_widest_and_completed_only():
         {"city": "A", "days": 2, "mean_range_c": 7.0, "widest_c": 10.0, "widest_day": dt.date(2026, 11, 1)}]
     assert dashboard.diurnal_range(_empty()) == []
     con.close()
+
+
+def test_breezy_days_threshold_inclusive_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": 5.0, "precipitation": 0.0, "wind_speed_10m": w}
+            for d, w in [(0, 30.0), (1, 29.9), (2, 45.0), (3, 90.0)]]       # day 3 in progress
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 4, 12, tzinfo=dt.timezone.utc)
+    assert dashboard.breezy_days(con, now_utc=now, threshold_kmh=30.0) == [
+        {"city": "A", "days": 3, "breezy_days": 2, "share": 0.6667, "peak_kmh": 45.0, "peak_day": dt.date(2026, 11, 3)}]
+    assert dashboard.breezy_days(con, now_utc=now, threshold_kmh=50.0)[0]["breezy_days"] == 0
+    assert dashboard.breezy_days(_empty()) == []
+    con.close()
