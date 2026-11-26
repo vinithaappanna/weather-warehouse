@@ -348,3 +348,18 @@ def test_data_coverage_counts_short_days_and_skips_in_progress():
     assert dashboard.data_coverage(con, now_utc=now) == [{"city": "A", "days": 2, "short_days": 1, "missing_hours": 4}]
     assert dashboard.data_coverage(_empty()) == []
     con.close()
+
+
+def test_diurnal_range_mean_widest_and_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = []
+    for d, (lo, hi) in enumerate([(0.0, 10.0), (2.0, 6.0), (-5.0, 30.0)]):   # day 2 in progress
+        for h, t in ((0, lo), (12, hi)):
+            rows.append({"city": "A", "hour": T0 + dt.timedelta(days=d, hours=h), "ingested_at": T0,
+                         "temperature_2m": t, "precipitation": 0.0, "wind_speed_10m": 5.0})
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 3, 6, tzinfo=dt.timezone.utc)
+    assert dashboard.diurnal_range(con, now_utc=now) == [
+        {"city": "A", "days": 2, "mean_range_c": 7.0, "widest_c": 10.0, "widest_day": dt.date(2026, 11, 1)}]
+    assert dashboard.diurnal_range(_empty()) == []
+    con.close()

@@ -275,6 +275,26 @@ def data_coverage(con, now_utc: dt.datetime | None = None, full_hours: int = 24)
             for c, h in sorted(per.items())]
 
 
+def diurnal_range(con, now_utc: dt.datetime | None = None) -> list[dict]:
+    """Per city over completed days: mean daily temperature range (max minus
+    min), the widest range and its date. Model output, current window only."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, min_temp_c, max_temp_c FROM mart_daily_city "
+        "WHERE min_temp_c IS NOT NULL AND max_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, lo, hi in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((round(hi - lo, 1), day))
+    out = []
+    for city, vals in sorted(per.items()):
+        widest = max(vals, key=lambda v: (v[0], -v[1].toordinal()))
+        out.append({"city": city, "days": len(vals), "mean_range_c": round(sum(v[0] for v in vals) / len(vals), 1),
+                    "widest_c": widest[0], "widest_day": widest[1]})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -442,6 +462,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Short days | Missing hours |", "| --- | ---: | ---: | ---: |"]
         for c in cov:
             lines.append(f"| {c['city']} | {c['days']} | {c['short_days']} | {c['missing_hours']} |")
+    dr = diurnal_range(con)
+    if dr:
+        lines += ["", "## Daily temperature range", "",
+                  "Maximum minus minimum temperature per completed day. Model output, current window only.", "",
+                  "| City | Days | Mean range (C) | Widest (C) | On |", "| --- | ---: | ---: | ---: | --- |"]
+        for r in dr:
+            lines.append(f"| {r['city']} | {r['days']} | {r['mean_range_c']} | {r['widest_c']} | {r['widest_day']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]
