@@ -319,6 +319,32 @@ def breezy_days(con, now_utc: dt.datetime | None = None, threshold_kmh: float = 
     return out
 
 
+def temperature_slope(con, now_utc: dt.datetime | None = None, min_days: int = 7) -> list[dict]:
+    """Least-squares slope of daily mean temperature against day number over
+    completed days (C per day), with the fitted change across the window.
+    Cities with fewer than min_days days are skipped. A short seasonal window
+    of model output: descriptive only, not a climate trend."""
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, avg_temp_c FROM mart_daily_city WHERE avg_temp_c IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, t in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append((day.toordinal(), t))
+    out = []
+    for city, pts in sorted(per.items()):
+        if len(pts) < min_days:
+            continue
+        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+        mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+        sxx = sum((x - mx) ** 2 for x in xs)
+        slope = sum((x - mx) * (y - my) for x, y in pts) / sxx
+        out.append({"city": city, "days": len(pts), "slope_c_per_day": round(slope, 3),
+                    "fitted_change_c": round(slope * (xs[-1] - xs[0]), 1)})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -500,6 +526,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Breezy days | Share | Peak (km/h) | On |", "| --- | ---: | ---: | ---: | ---: | --- |"]
         for b in breezy:
             lines.append(f"| {b['city']} | {b['days']} | {b['breezy_days']} | {b['share']:.1%} | {b['peak_kmh']} | {b['peak_day']} |")
+    slope = temperature_slope(con)
+    if slope:
+        lines += ["", "## Temperature drift over the window", "",
+                  "Least-squares slope of daily mean temperature over completed days. A short autumn window of model output: descriptive only, mostly seasonal, not a climate trend.", "",
+                  "| City | Days | Slope (C/day) | Fitted change (C) |", "| --- | ---: | ---: | ---: |"]
+        for r in slope:
+            lines.append(f"| {r['city']} | {r['days']} | {r['slope_c_per_day']} | {r['fitted_change_c']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

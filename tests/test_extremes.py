@@ -377,3 +377,17 @@ def test_breezy_days_threshold_inclusive_completed_only():
     assert dashboard.breezy_days(con, now_utc=now, threshold_kmh=50.0)[0]["breezy_days"] == 0
     assert dashboard.breezy_days(_empty()) == []
     con.close()
+
+
+def test_temperature_slope_exact_line_min_days_and_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": 10.0 - 0.5 * d if d < 8 else 99.0, "precipitation": 0.0, "wind_speed_10m": 5.0}
+            for d in range(9)]                                              # day 8 in progress
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 9, 6, tzinfo=dt.timezone.utc)
+    assert dashboard.temperature_slope(con, now_utc=now) == [
+        {"city": "A", "days": 8, "slope_c_per_day": -0.5, "fitted_change_c": -3.5}]
+    assert dashboard.temperature_slope(con, now_utc=now, min_days=9) == []
+    assert dashboard.temperature_slope(_empty()) == []
+    con.close()
