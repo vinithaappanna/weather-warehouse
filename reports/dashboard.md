@@ -1,13 +1,13 @@
 # Weather Warehouse - daily dashboard
 
-Generated 2026-11-27 15:04 UTC.
+Generated 2026-11-27 20:04 UTC.
 
 | city | day | avg_temp_c | min_temp_c | max_temp_c | total_precip_mm | max_wind_kmh | hours_observed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Chicago | 2026-11-27 | 3.84 | 0.8 | 6.0 | 9.7 | 36.7 | 24 |
-| New York | 2026-11-27 | 9.98 | 5.3 | 13.9 | 2.9 | 27.7 | 24 |
-| Newark | 2026-11-27 | 9.61 | 5.4 | 12.5 | 1.8 | 23.3 | 24 |
-| San Francisco | 2026-11-27 | 12.28 | 9.8 | 15.3 | 0.0 | 12.6 | 24 |
+| Chicago | 2026-11-27 | 3.68 | 0.5 | 5.7 | 9.7 | 36.7 | 24 |
+| New York | 2026-11-27 | 10.16 | 4.9 | 13.9 | 0.4 | 26.8 | 24 |
+| Newark | 2026-11-27 | 9.75 | 4.6 | 12.6 | 0.0 | 21.7 | 24 |
+| San Francisco | 2026-11-27 | 12.05 | 9.2 | 15.1 | 0.0 | 13.8 | 24 |
 | Chicago | 2026-11-26 | 5.6 | 4.1 | 6.6 | 12.7 | 36.7 | 24 |
 | New York | 2026-11-26 | 7.02 | 5.6 | 10.9 | 40.8 | 42.0 | 24 |
 | Newark | 2026-11-26 | 6.31 | 4.6 | 10.8 | 43.5 | 40.0 | 24 |
@@ -65,8 +65,8 @@ Model output in mm over the window; the current day includes forecast hours.
 | city | total mm | wet days (>=1 mm) |
 | --- | ---: | ---: |
 | San Francisco | 104.1 | 10 |
-| Newark | 80.0 | 4 |
-| New York | 69.0 | 4 |
+| Newark | 78.2 | 3 |
+| New York | 66.5 | 3 |
 | Chicago | 40.9 | 7 |
 
 ## City leaders, 2026-11-26 (latest day complete in every city)
@@ -84,10 +84,10 @@ Last successful Open-Meteo fetch per city (empty or failed fetches do not count)
 
 | City | Last successful fetch | Age (h) | Failed fetches since | Latest hour held |
 | --- | --- | ---: | ---: | --- |
-| Chicago | 2026-11-27 10:04:20.428309 | 0.0 | 0 | 2026-11-27 23:00:00 |
-| New York | 2026-11-27 10:04:20.428309 | 0.0 | 0 | 2026-11-27 23:00:00 |
-| Newark | 2026-11-27 10:04:20.428309 | 0.0 | 0 | 2026-11-27 23:00:00 |
-| San Francisco | 2026-11-27 10:04:20.428309 | 0.0 | 0 | 2026-11-27 23:00:00 |
+| Chicago | 2026-11-27 15:04:12.067568 | 0.0 | 0 | 2026-11-27 23:00:00 |
+| New York | 2026-11-27 15:04:12.067568 | 0.0 | 0 | 2026-11-27 23:00:00 |
+| Newark | 2026-11-27 15:04:12.067568 | 0.0 | 0 | 2026-11-27 23:00:00 |
+| San Francisco | 2026-11-27 15:04:12.067568 | 0.0 | 0 | 2026-11-27 23:00:00 |
 
 ## Dry-day streaks (rain under 1 mm)
 
@@ -246,6 +246,17 @@ Wet day = 1 mm or more of total rain (illustrative, same cut-off as the dry stre
 | New York | 18 | 3 | 16.7% | 22.0 |
 | Newark | 18 | 3 | 16.7% | 26.1 |
 | San Francisco | 18 | 10 | 55.6% | 10.4 |
+
+## Daily peak wind summary
+
+Mean and 90th percentile (nearest rank) of each completed day's peak hourly wind. Model output, current window only.
+
+| City | Days | Mean peak (km/h) | 90th percentile (km/h) |
+| --- | ---: | ---: | ---: |
+| Chicago | 18 | 19.3 | 29.4 |
+| New York | 18 | 18.7 | 29.9 |
+| Newark | 18 | 19.2 | 30.1 |
+| San Francisco | 18 | 14.0 | 21.9 |
 
 ![Total rain per city](rain_totals.png)
 

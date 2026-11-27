@@ -365,6 +365,26 @@ def wet_day_intensity(con, now_utc: dt.datetime | None = None, wet_mm: float = 1
     return out
 
 
+def wind_summary(con, now_utc: dt.datetime | None = None) -> list[dict]:
+    """Per city over completed days: mean and 90th percentile (nearest rank) of
+    the daily peak hourly wind speed, in km/h. Model output, current window only."""
+    import math
+    from .extremes import day_status
+
+    rows = con.execute(
+        "SELECT city, day, max_wind_kmh FROM mart_daily_city WHERE max_wind_kmh IS NOT NULL ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, w in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append(w)
+    out = []
+    for city, vals in sorted(per.items()):
+        v = sorted(vals)
+        out.append({"city": city, "days": len(v), "mean_peak_kmh": round(sum(v) / len(v), 1),
+                    "p90_peak_kmh": v[max(0, math.ceil(0.9 * len(v)) - 1)]})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -560,6 +580,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Wet days | Share | Mean rain on wet days (mm) |", "| --- | ---: | ---: | ---: | ---: |"]
         for r in wi:
             lines.append(f"| {r['city']} | {r['days']} | {r['wet_days']} | {r['share']:.1%} | {r['mean_wet_mm']} |")
+    ws = wind_summary(con)
+    if ws:
+        lines += ["", "## Daily peak wind summary", "",
+                  "Mean and 90th percentile (nearest rank) of each completed day's peak hourly wind. Model output, current window only.", "",
+                  "| City | Days | Mean peak (km/h) | 90th percentile (km/h) |", "| --- | ---: | ---: | ---: |"]
+        for r in ws:
+            lines.append(f"| {r['city']} | {r['days']} | {r['mean_peak_kmh']} | {r['p90_peak_kmh']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

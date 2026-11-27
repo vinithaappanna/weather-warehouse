@@ -407,3 +407,16 @@ def test_wet_day_intensity_threshold_inclusive_zero_wet_and_completed_only():
         {"city": "B", "days": 3, "wet_days": 0, "share": 0.0, "mean_wet_mm": 0.0}]
     assert dashboard.wet_day_intensity(_empty()) == []
     con.close()
+
+
+def test_wind_summary_mean_p90_nearest_rank_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = [{"city": "A", "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+             "temperature_2m": 5.0, "precipitation": 0.0, "wind_speed_10m": float(w)}
+            for d, w in enumerate(list(range(10, 110, 10)) + [500])]        # last day in progress
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 11, 6, tzinfo=dt.timezone.utc)
+    assert dashboard.wind_summary(con, now_utc=now) == [
+        {"city": "A", "days": 10, "mean_peak_kmh": 55.0, "p90_peak_kmh": 90.0}]
+    assert dashboard.wind_summary(_empty()) == []
+    con.close()
