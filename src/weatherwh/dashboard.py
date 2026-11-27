@@ -345,6 +345,26 @@ def temperature_slope(con, now_utc: dt.datetime | None = None, min_days: int = 7
     return out
 
 
+def wet_day_intensity(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) -> list[dict]:
+    """Per city over completed days: wet days (total rain at or above wet_mm),
+    their share, and mean rain on wet days. wet_mm matches dry_streaks and is
+    illustrative. Zero wet days is a valid result (mean shown as 0.0). Model output."""
+    from .extremes import day_status
+
+    rows = con.execute("SELECT city, day, total_precip_mm FROM mart_daily_city ORDER BY city, day").fetchall()
+    per: dict[str, list] = {}
+    for city, day, mm in rows:
+        if day_status(city, day, now_utc) == "complete":
+            per.setdefault(city, []).append(mm or 0.0)
+    out = []
+    for city, vals in sorted(per.items()):
+        wet = [v for v in vals if v >= wet_mm]
+        out.append({"city": city, "days": len(vals), "wet_days": len(wet),
+                    "share": round(len(wet) / len(vals), 4),
+                    "mean_wet_mm": round(sum(wet) / len(wet), 1) if wet else 0.0})
+    return out
+
+
 def plot_rain_totals(con, out_path, now_utc: dt.datetime | None = None, wet_days: bool = True) -> bool:
     """Total rain per city over completed days only (in-progress days include
     forecast hours and would skew totals). Bars annotated with the number of
@@ -533,6 +553,13 @@ def render_markdown(con, generated_at: dt.datetime | None = None) -> str:
                   "| City | Days | Slope (C/day) | Fitted change (C) |", "| --- | ---: | ---: | ---: |"]
         for r in slope:
             lines.append(f"| {r['city']} | {r['days']} | {r['slope_c_per_day']} | {r['fitted_change_c']} |")
+    wi = wet_day_intensity(con)
+    if wi:
+        lines += ["", "## Wet-day frequency and intensity", "",
+                  "Wet day = 1 mm or more of total rain (illustrative, same cut-off as the dry streaks). Completed days only. Model output, current window only.", "",
+                  "| City | Days | Wet days | Share | Mean rain on wet days (mm) |", "| --- | ---: | ---: | ---: | ---: |"]
+        for r in wi:
+            lines.append(f"| {r['city']} | {r['days']} | {r['wet_days']} | {r['share']:.1%} | {r['mean_wet_mm']} |")
     lines += ["", "![Total rain per city](rain_totals.png)", ""]
     lines += ["", "![Daily temperature range by city](temp_range_by_city.png)", ""]
     severe = extremes.severe_days(con)[:8]

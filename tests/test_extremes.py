@@ -391,3 +391,19 @@ def test_temperature_slope_exact_line_min_days_and_completed_only():
     assert dashboard.temperature_slope(con, now_utc=now, min_days=9) == []
     assert dashboard.temperature_slope(_empty()) == []
     con.close()
+
+
+def test_wet_day_intensity_threshold_inclusive_zero_wet_and_completed_only():
+    con = warehouse.connect(":memory:")
+    rows = []
+    for city, rain in (("A", [1.0, 0.9, 3.0, 50.0]), ("B", [0.0, 0.2, 0.0, 9.0])):     # day 3 in progress
+        for d, mm in enumerate(rain):
+            rows.append({"city": city, "hour": T0 + dt.timedelta(days=d), "ingested_at": T0,
+                         "temperature_2m": 5.0, "precipitation": mm, "wind_speed_10m": 5.0})
+    warehouse.refresh(con, rows)
+    now = dt.datetime(2026, 11, 4, 12, tzinfo=dt.timezone.utc)
+    assert dashboard.wet_day_intensity(con, now_utc=now) == [
+        {"city": "A", "days": 3, "wet_days": 2, "share": 0.6667, "mean_wet_mm": 2.0},
+        {"city": "B", "days": 3, "wet_days": 0, "share": 0.0, "mean_wet_mm": 0.0}]
+    assert dashboard.wet_day_intensity(_empty()) == []
+    con.close()
