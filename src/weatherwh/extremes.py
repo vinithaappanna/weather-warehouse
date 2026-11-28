@@ -55,3 +55,31 @@ def day_status(city: str, day, now_utc: dt.datetime | None = None) -> str:
     """'complete' for city-local days that have ended; otherwise the day is
     still in progress and its totals include forecast hours."""
     return "complete" if day < city_today(city, now_utc) else "in progress (includes forecast hours)"
+
+
+DRY_DAY_MM = 0.1
+
+
+def longest_dry_streaks(con, now_utc: dt.datetime | None = None) -> list[dict]:
+    """Longest run of consecutive complete days under DRY_DAY_MM total
+    precipitation, per city (model output; in-progress days are excluded and a
+    missing day ends a run). Ties keep the earliest run. Sorted by length then
+    city. The 0.1 mm cutoff is an illustrative choice, not a standard."""
+    rows = con.execute("SELECT city, day, total_precip_mm FROM mart_daily_city ORDER BY city, day").fetchall()
+    best: dict[str, dict] = {}
+    cur: dict[str, dict] = {}
+    for city, day, precip in rows:
+        if day_status(city, day, now_utc) != "complete":
+            continue
+        run = cur.get(city)
+        dry = precip is not None and precip < DRY_DAY_MM
+        if dry and run and day == run["end"] + dt.timedelta(days=1):
+            run["end"], run["days"] = day, run["days"] + 1
+        elif dry:
+            run = cur[city] = {"city": city, "start": day, "end": day, "days": 1}
+        else:
+            cur.pop(city, None)
+            continue
+        if city not in best or run["days"] > best[city]["days"]:
+            best[city] = dict(run)
+    return sorted(best.values(), key=lambda r: (-r["days"], r["city"]))

@@ -34,3 +34,15 @@ def test_main_outputs_and_exit_codes(capsys):
     assert cli.main(["severe"], con=con) == 0
     out = capsys.readouterr().out
     assert "heavy rain" in out and "not official weather alerts" in out
+
+
+def test_dry_subcommand_prints_streaks_and_caveat(capsys):
+    import datetime as dt
+    from weatherwh import cli, warehouse
+    con = warehouse.connect(":memory:")
+    t0 = dt.datetime(2026, 1, 1)
+    warehouse.refresh(con, [{"city": "New York", "hour": t0 + dt.timedelta(days=d), "ingested_at": t0,
+                             "temperature_2m": 5.0, "precipitation": 0.0, "wind_speed_10m": 5.0} for d in range(3)])
+    assert cli.main(["dry"], con=con) == 0
+    out = capsys.readouterr().out
+    assert "New York" in out and "3 days" in out and "illustrative cutoff" in out

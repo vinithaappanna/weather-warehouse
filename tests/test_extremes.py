@@ -420,3 +420,17 @@ def test_wind_summary_mean_p90_nearest_rank_completed_only():
         {"city": "A", "days": 10, "mean_peak_kmh": 55.0, "p90_peak_kmh": 90.0}]
     assert dashboard.wind_summary(_empty()) == []
     con.close()
+
+
+def test_longest_dry_streaks_breaks_on_rain_gap_and_in_progress_days():
+    con = warehouse.connect(":memory:")
+    # A: dry d0-d2, rain d3, dry d4. B: dry d0, missing d1, dry d2-d3. C: wet only.
+    load(con, [("A", 0, 0, 5), ("A", 1, 0, 5), ("A", 2, 0.05, 5), ("A", 3, 2.0, 5), ("A", 4, 0, 5),
+               ("B", 0, 0, 5), ("B", 2, 0, 5), ("B", 3, 0, 5), ("C", 0, 1.0, 5)])
+    out = extremes.longest_dry_streaks(con, now_utc=dt.datetime(2026, 11, 5, 12, tzinfo=dt.timezone.utc))
+    assert [(r["city"], r["days"]) for r in out] == [("A", 3), ("B", 2)]
+    assert out[0]["start"] == dt.date(2026, 11, 1) and out[0]["end"] == dt.date(2026, 11, 3)
+    # Nov 3 still in progress at this moment, so A's run is cut to 2 days
+    early = extremes.longest_dry_streaks(con, now_utc=dt.datetime(2026, 11, 3, 12, tzinfo=dt.timezone.utc))
+    assert [(r["city"], r["days"]) for r in early] == [("A", 2), ("B", 1)]
+    con.close()

@@ -48,6 +48,7 @@ def main(argv=None, con=None) -> int:
     c = sub.add_parser("city"); c.add_argument("name"); c.add_argument("--days", type=int, default=7)
     sub.add_parser("latest")
     sub.add_parser("severe")
+    sub.add_parser("dry")
     args = ap.parse_args(argv)
     if con is None:
         import duckdb
@@ -58,6 +59,12 @@ def main(argv=None, con=None) -> int:
         return 0 if rows else 1
     if args.cmd == "latest":
         print(_fmt(latest_by_city(con)))
+        return 0
+    if args.cmd == "dry":
+        runs = extremes.longest_dry_streaks(con)
+        print("\n".join(f"{r['city']:<14} {r['days']} days ({r['start']} to {r['end']})" for r in runs)
+              or "no complete dry days")
+        print("Model output; dry means under 0.1 mm/day, an illustrative cutoff.")
         return 0
     sev = extremes.severe_days(con)
     print("\n".join(f"{s['city']:<14} {s['day']} {s['reasons']} (rain {s['precip_mm']} mm, "
