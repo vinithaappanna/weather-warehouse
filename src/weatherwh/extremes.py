@@ -57,14 +57,14 @@ def day_status(city: str, day, now_utc: dt.datetime | None = None) -> str:
     return "complete" if day < city_today(city, now_utc) else "in progress (includes forecast hours)"
 
 
-DRY_DAY_MM = 0.1
+DRY_DAY_MM = 1.0  # same cut-off as the dashboard dry streaks and claims_link.WET_MM
 
 
 def longest_dry_streaks(con, now_utc: dt.datetime | None = None) -> list[dict]:
     """Longest run of consecutive complete days under DRY_DAY_MM total
     precipitation, per city (model output; in-progress days are excluded and a
     missing day ends a run). Ties keep the earliest run. Sorted by length then
-    city. The 0.1 mm cutoff is an illustrative choice, not a standard."""
+    city. The 1 mm cutoff is the same illustrative one the dashboard uses, not a standard."""
     rows = con.execute("SELECT city, day, total_precip_mm FROM mart_daily_city ORDER BY city, day").fetchall()
     best: dict[str, dict] = {}
     cur: dict[str, dict] = {}

@@ -61,4 +61,4 @@ laptop in seconds.
 
 `scripts/safe_commit.sh "message"` runs the test suite and commits only if it passes (fail-closed: a failing test, a collection error or no passing tests blocks the commit). It does not push.
 
-`weather-query dry` lists each city's longest run of complete days under 0.1 mm precipitation (model output, illustrative cutoff).
+`weather-query dry` lists each city's longest run of complete days under 1 mm precipitation (model output; the same illustrative cutoff as the dashboard's dry-day streaks).

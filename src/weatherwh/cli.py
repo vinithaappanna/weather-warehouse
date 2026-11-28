@@ -64,7 +64,7 @@ def main(argv=None, con=None) -> int:
         runs = extremes.longest_dry_streaks(con)
         print("\n".join(f"{r['city']:<14} {r['days']} days ({r['start']} to {r['end']})" for r in runs)
               or "no complete dry days")
-        print("Model output; dry means under 0.1 mm/day, an illustrative cutoff.")
+        print("Model output; dry means under 1 mm/day, the same illustrative cutoff as the dashboard dry streaks.")
         return 0
     sev = extremes.severe_days(con)
     print("\n".join(f"{s['city']:<14} {s['day']} {s['reasons']} (rain {s['precip_mm']} mm, "

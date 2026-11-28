@@ -434,3 +434,14 @@ def test_longest_dry_streaks_breaks_on_rain_gap_and_in_progress_days():
     early = extremes.longest_dry_streaks(con, now_utc=dt.datetime(2026, 11, 3, 12, tzinfo=dt.timezone.utc))
     assert [(r["city"], r["days"]) for r in early] == [("A", 2), ("B", 1)]
     con.close()
+
+
+def test_cli_dry_streak_cutoff_matches_dashboard():
+    con = warehouse.connect(":memory:")
+    # 0.5 mm days are dry under the shared 1 mm cutoff; 1.0 mm is wet
+    load(con, [("A", 0, 0.5, 5), ("A", 1, 0.5, 5), ("A", 2, 1.0, 5), ("A", 3, 0.0, 5)])
+    now = dt.datetime(2026, 11, 10, tzinfo=dt.timezone.utc)
+    cli_run = extremes.longest_dry_streaks(con, now_utc=now)[0]["days"]
+    dash = dashboard.dry_streaks(con, now_utc=now)[0]["longest_dry_days"]
+    assert cli_run == dash == 2 and extremes.DRY_DAY_MM == 1.0
+    con.close()

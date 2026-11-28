@@ -45,4 +45,4 @@ def test_dry_subcommand_prints_streaks_and_caveat(capsys):
                              "temperature_2m": 5.0, "precipitation": 0.0, "wind_speed_10m": 5.0} for d in range(3)])
     assert cli.main(["dry"], con=con) == 0
     out = capsys.readouterr().out
-    assert "New York" in out and "3 days" in out and "illustrative cutoff" in out
+    assert "New York" in out and "3 days" in out and "1 mm/day" in out and "same illustrative cutoff" in out
