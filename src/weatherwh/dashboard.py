@@ -62,7 +62,8 @@ def source_freshness(con, now: dt.datetime | None = None) -> list[dict]:
 def dry_streaks(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) -> list[dict]:
     """Per city: current run of consecutive completed days with total rain
     below wet_mm (a "dry" day), and the longest such run in the data.
-    In-progress days are skipped (they include forecast hours). Model output;
+    In-progress days are skipped (they include forecast hours). A missing
+    (unobserved) day ends a run, so a streak never spans a gap. Model output;
     wet_mm is illustrative, not a drought measure."""
     from .extremes import day_status
 
@@ -74,15 +75,22 @@ def dry_streaks(con, now_utc: dt.datetime | None = None, wet_mm: float = 1.0) ->
             per.setdefault(city, []).append((day, mm or 0.0))
     out = []
     for city, days in sorted(per.items()):
+        one = dt.timedelta(days=1)
         current = 0
-        for _day, mm in reversed(days):
-            if mm < wet_mm:
-                current += 1
-            else:
-                break
+        prev = None
+        for day, mm in reversed(days):
+            if mm >= wet_mm or (prev is not None and prev - day != one):
+                break  # wet day, or an unobserved day ends the run
+            current += 1
+            prev = day
         longest = run = 0
-        for _day, mm in days:
-            run = run + 1 if mm < wet_mm else 0
+        prev = None
+        for day, mm in days:
+            if mm < wet_mm:
+                run = run + 1 if (run and prev is not None and day - prev == one) else 1
+            else:
+                run = 0
+            prev = day
             longest = max(longest, run)
         out.append({"city": city, "current_dry_days": current, "longest_dry_days": longest})
     return out

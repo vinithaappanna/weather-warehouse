@@ -445,3 +445,16 @@ def test_cli_dry_streak_cutoff_matches_dashboard():
     dash = dashboard.dry_streaks(con, now_utc=now)[0]["longest_dry_days"]
     assert cli_run == dash == 2 and extremes.DRY_DAY_MM == 1.0
     con.close()
+
+
+def test_dry_streak_never_spans_a_missing_day_and_cli_matches_dashboard():
+    con = warehouse.connect(":memory:")
+    # A: dry d0, d1, (d2 missing), d3, d4, d5 -> longest 3, current 3. B: dry d0, d2 (gap) -> 1.
+    load(con, [("A", 0, 0, 5), ("A", 1, 0, 5), ("A", 3, 0, 5), ("A", 4, 0, 5), ("A", 5, 0, 5),
+               ("B", 0, 0, 5), ("B", 2, 0, 5)])
+    now = dt.datetime(2026, 11, 10, tzinfo=dt.timezone.utc)
+    dash = {r["city"]: r for r in dashboard.dry_streaks(con, now_utc=now)}
+    cli = {r["city"]: r["days"] for r in extremes.longest_dry_streaks(con, now_utc=now)}
+    assert dash["A"]["longest_dry_days"] == cli["A"] == 3 and dash["A"]["current_dry_days"] == 3
+    assert dash["B"]["longest_dry_days"] == cli["B"] == 1 and dash["B"]["current_dry_days"] == 1
+    con.close()
